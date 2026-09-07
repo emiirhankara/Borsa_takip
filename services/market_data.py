@@ -4,6 +4,7 @@ from typing import Any
 
 import pandas as pd
 import yfinance as yf
+from yfinance import EquityQuery
 
 
 @dataclass
@@ -12,6 +13,36 @@ class MarketDataError:
 
 
 class MarketDataService:
+    def screener_quotes(self, market: str) -> list[dict[str, Any]]:
+        """Yahoo Finance tarayıcısından piyasanın güncel hisse listesini getirir."""
+        exchanges = ["IST"] if market == "BIST" else ["NMS", "NYQ", "ASE"]
+        query = EquityQuery("is-in", ["exchange", *exchanges])
+        try:
+            first = yf.screen(query, offset=0, count=250, sortField="intradaymarketcap", sortAsc=False)
+            total = int(first.get("total", 0))
+            quotes = list(first.get("quotes", []))
+            offset = len(quotes)
+            while offset < total and quotes:
+                page = yf.screen(query, offset=offset, count=250, sortField="intradaymarketcap", sortAsc=False)
+                page_quotes = page.get("quotes", [])
+                quotes.extend(page_quotes)
+                offset += len(page_quotes)
+            return [
+                {
+                    "symbol": item.get("symbol", ""),
+                    "name": item.get("shortName") or item.get("longName") or item.get("symbol", ""),
+                    "price": float(item.get("regularMarketPrice") or 0),
+                    "change_pct": float(item.get("regularMarketChangePercent") or 0),
+                    "volume": int(item.get("regularMarketVolume") or 0),
+                    "market_cap": float(item.get("marketCap") or 0),
+                    "currency": item.get("currency", "USD"),
+                }
+                for item in quotes
+                if item.get("symbol")
+            ]
+        except Exception as exc:
+            raise RuntimeError(f"{market} hisse listesi alinamadi: {exc}") from exc
+
     def history(self, symbol: str, period: str = "1y", interval: str = "1d") -> pd.DataFrame:
         symbol = symbol.strip().upper()
         if not symbol:

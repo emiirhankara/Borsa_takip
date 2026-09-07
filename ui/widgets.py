@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QThread, pyqtSignal
-from PyQt5.QtWidgets import QLabel, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QHeaderView, QLabel, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
@@ -38,6 +38,13 @@ class ChartCanvas(FigureCanvas):
 
 
 class ResultTable(QTableWidget):
+    def fill_container(self):
+        """Make the table columns use the complete width of their panel."""
+        header = self.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.Stretch)
+        self.verticalHeader().setDefaultSectionSize(34)
+        self.setMinimumHeight(145)
+
     def load_rows(self, rows, headers):
         self.clear()
         self.setColumnCount(len(headers))

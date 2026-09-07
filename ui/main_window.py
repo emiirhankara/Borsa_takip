@@ -3,9 +3,8 @@ import webbrowser
 
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtWidgets import (
-    QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QGroupBox, QHBoxLayout,
-    QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton, QSplitter, QSpinBox, QTabWidget,
-    QTextBrowser, QTableWidgetItem, QVBoxLayout, QWidget,
+    QComboBox, QDoubleSpinBox, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMainWindow,
+    QPushButton, QSplitter, QTabWidget, QTextBrowser, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
 from analysis.technical import forecast, indicators
@@ -40,6 +39,7 @@ class MainWindow(QMainWindow):
         self.current_quote = None
         self.current_predictions = []
         self.current_dividend = {"annual_per_share": 0.0, "payment_count": 0}
+        self.market_rows = {"BIST": [], "US": []}
         self.setWindowTitle("PiyasaRadar | BIST & NYSE/NASDAQ")
         self.resize(1380, 860)
         self.setStyleSheet(THEME)
@@ -73,7 +73,6 @@ class MainWindow(QMainWindow):
         self.tabs = QTabWidget()
         self.dashboard_tab = self._build_dashboard()
         self.tabs.addTab(self.dashboard_tab, "Genel Bakış")
-        self.tabs.addTab(self._build_dividend_tab(), "ABD Aylık Temettü")
         self.tabs.addTab(self._build_financial_tab(), "Finansallar")
         self.tabs.addTab(self._build_news_tab(), "Haber Akışı")
         layout.addWidget(self.tabs)
@@ -105,7 +104,7 @@ class MainWindow(QMainWindow):
         self.quote_label = QLabel("Veri yükleniyor...")
         self.quote_label.setStyleSheet("font-size: 23px; font-weight: 700; padding: 4px 0;")
         center_layout.addWidget(self.quote_label)
-        self.recommendation_label = QLabel("Gerçek veriler yükleniyor...")
+        self.recommendation_label = QLabel("BIST ve ABD piyasalarının tüm listesi yükleniyor...")
         self.recommendation_label.setWordWrap(True)
         self.recommendation_label.setStyleSheet("color: #f5b041; padding: 3px 0;")
         center_layout.addWidget(self.recommendation_label)
@@ -118,6 +117,7 @@ class MainWindow(QMainWindow):
         forecast_group = QGroupBox("İstatistiksel Öngörü (yatırım tavsiyesi değildir)")
         forecast_layout = QVBoxLayout(forecast_group)
         self.forecast_table = ResultTable()
+        self.forecast_table.fill_container()
         forecast_layout.addWidget(self.forecast_table)
         lower.addWidget(forecast_group)
         indicator_group = QGroupBox("Teknik Göstergeler")
@@ -162,6 +162,11 @@ class MainWindow(QMainWindow):
         right_layout = QVBoxLayout(right_panel)
         right_layout.setContentsMargins(0, 0, 0, 0)
         right_layout.addWidget(us_panel, 1)
+        comparison_panel = QGroupBox("Diğer hisselerle karşılaştırma")
+        comparison_layout = QVBoxLayout(comparison_panel)
+        self.comparison_table = ResultTable()
+        comparison_layout.addWidget(self.comparison_table)
+        right_layout.addWidget(comparison_panel, 1)
         right_layout.addWidget(order_panel, 1)
         layout.addWidget(right_panel, 1)
         return page
@@ -169,9 +174,9 @@ class MainWindow(QMainWindow):
     def _build_market_panel(self, title, symbols, placeholder):
         panel = QGroupBox(title)
         layout = QVBoxLayout(panel)
-        input_field = QLineEdit(symbols)
-        input_field.setPlaceholderText(placeholder)
-        input_field.returnPressed.connect(self._refresh_watchlist)
+        input_field = QLineEdit()
+        input_field.setPlaceholderText(f"{placeholder} | tüm liste otomatik gelir")
+        input_field.returnPressed.connect(lambda: self._filter_market_table(title, input_field.text()))
         layout.addWidget(input_field)
         table = ResultTable()
         table.setSelectionBehavior(table.SelectRows)
@@ -183,6 +188,14 @@ class MainWindow(QMainWindow):
         else:
             self.us_watchlist_input = input_field
         return table, panel
+
+    def _filter_market_table(self, title, text):
+        market = "BIST" if title.startswith("Borsa") else "US"
+        needle = text.strip().upper()
+        rows = self.market_rows[market]
+        if needle:
+            rows = [row for row in rows if needle in row["symbol"] or needle in row["name"].upper()]
+        self._load_market_table(self.bist_table if market == "BIST" else self.us_table, rows)
 
     def _build_dividend_tab(self):
         page = QWidget()
@@ -235,60 +248,36 @@ class MainWindow(QMainWindow):
         self._run(self.news.fetch, self._present_news, symbol, NEWS_LIMIT)
         self._run(self.market.financial_tables, self._present_financials, symbol)
 
-    def _symbols_from_input(self):
-        text = f"{self.bist_input.text()},{self.us_watchlist_input.text()}"
-        symbols = [item.strip().upper() for item in text.replace(";", ",").split(",") if item.strip()]
-        return list(dict.fromkeys(symbols))
-
     def _refresh_watchlist(self):
-        symbols = self._symbols_from_input()
-        if not symbols:
-            self.status.setText("En az bir sembol girin")
-            return
-        self.watchlist = symbols
-        self._run(self._fetch_watchlist, self._present_watchlist, symbols)
+        self._run(self._fetch_market_universes, self._present_market_universes)
 
-    def _fetch_watchlist(self, symbols):
-        rows = []
-        for symbol in symbols:
-            try:
-                history = self.market.history(symbol)
-                quote = self.market.quote(symbol)
-                predictions = forecast(history)
-                one_month = predictions[0]
-                rows.append({
-                    "symbol": quote["symbol"],
-                    "price": quote["price"],
-                    "currency": quote["currency"],
-                    "change_pct": quote["change_pct"],
-                    "forecast_pct": one_month.change_pct,
-                    "signal": one_month.signal,
-                    "confidence": one_month.confidence,
-                })
-            except Exception:
-                continue
-        return rows
+    def _fetch_market_universes(self):
+        return {"BIST": self.market.screener_quotes("BIST"), "US": self.market.screener_quotes("US")}
 
-    def _present_watchlist(self, rows):
-        if not rows:
-            self.recommendation_label.setText("Gösterilecek geçerli hisse bulunamadı.")
+    def _present_market_universes(self, markets):
+        self.market_rows = markets
+        bist_rows = markets["BIST"]
+        us_rows = markets["US"]
+        if not bist_rows and not us_rows:
+            self.recommendation_label.setText("Piyasa listesi alınamadı.")
             return
-        rows.sort(key=lambda row: row["forecast_pct"], reverse=True)
+        self._load_market_table(self.bist_table, bist_rows)
+        self._load_market_table(self.us_table, us_rows)
+        best = max(bist_rows + us_rows, key=lambda row: row["change_pct"])
+        self.recommendation_label.setText(
+            f"Gerçek zamanlı piyasa taraması: {len(bist_rows)} BIST, {len(us_rows)} ABD hissesi. "
+            f"Günün en yüksek hareketi: {best['symbol']} ({best['change_pct']:+.2f}%). "
+            "Bir hisse seçerek ayrıntılı grafik ve tahminini açın."
+        )
+        if bist_rows:
+            self._load_symbol(bist_rows[0]["symbol"], load_watchlist=False)
+
+    def _load_market_table(self, table, rows):
         table_rows = [
-            [row["symbol"], f"{row['price']:.2f} {row['currency']}", f"{row['change_pct']:+.2f}%",
-             f"{row['forecast_pct']:+.2f}%", row["signal"], row["confidence"]]
+            [row["symbol"], row["name"][:24], f"{row['price']:.2f} {row['currency']}", f"{row['change_pct']:+.2f}%", f"{row['volume']:,}"]
             for row in rows
         ]
-        headers = ["Sembol", "Son fiyat", "Günlük değişim", "1 ay senaryosu", "Sinyal", "Güven"]
-        self.bist_table.load_rows([row for row in table_rows if row[0].endswith(".IS")], headers)
-        self.us_table.load_rows([row for row in table_rows if not row[0].endswith(".IS")], headers)
-        best = rows[0]
-        self.recommendation_label.setText(
-            f"Veriye dayalı 1 ay senaryosunda en yüksek tahmini getiri: {best['symbol']} "
-            f"({best['forecast_pct']:+.2f}%, güven: {best['confidence']}). "
-            "Bu bir garanti veya yatırım tavsiyesi değildir; geçmiş fiyat verisine dayalı istatistiksel tahmindir."
-        )
-        self._load_symbol(best["symbol"], load_watchlist=False)
+        table.load_rows(table_rows, ["Sembol", "Şirket", "Fiyat", "Günlük", "Hacim"])
 
     def _watchlist_row_clicked(self, row, _column):
         table = self.sender()
@@ -317,6 +306,20 @@ class MainWindow(QMainWindow):
         self.sma_label.setText(f"{latest['SMA20']:.2f} / {latest['SMA50']:.2f}")
         rows = [[item.horizon, f"{item.target_price:.2f}", f"{item.change_pct:+.2f}%", item.signal, item.confidence] for item in predictions]
         self.forecast_table.load_rows(rows, ["Vade", "Tahmini Fiyat", "Potansiyel", "Sinyal", "Güven"])
+        self.forecast_table.fill_container()
+        self._present_comparison(quote["symbol"])
+
+    def _present_comparison(self, symbol):
+        market = "BIST" if symbol.endswith(".IS") else "US"
+        rows = self.market_rows.get(market, [])
+        selected = next((row for row in rows if row["symbol"] == symbol), None)
+        peers = sorted(rows, key=lambda row: row["change_pct"], reverse=True)[:5]
+        if selected and selected not in peers:
+            peers.append(selected)
+        self.comparison_table.load_rows(
+            [[row["symbol"], f"{row['price']:.2f}", f"{row['change_pct']:+.2f}%", f"{row['volume']:,}"] for row in peers],
+            ["Sembol", "Fiyat", "Günlük", "Hacim"],
+        )
 
     def _calculate_test_buy(self):
         if not self.current_quote or not self.current_predictions:
