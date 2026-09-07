@@ -45,6 +45,22 @@ class MarketDataService:
         except Exception as exc:
             raise RuntimeError(f"Fiyat bilgisi alinamadi: {exc}") from exc
 
+    def dividend_info(self, symbol: str) -> dict[str, Any]:
+        """Son 12 aydaki gerçek ödemelerden hisse başı temettüyü hesaplar."""
+        try:
+            ticker = yf.Ticker(symbol.strip().upper())
+            dividends = ticker.dividends
+            if dividends.empty:
+                return {"annual_per_share": 0.0, "payment_count": 0}
+            cutoff = pd.Timestamp.now(tz=dividends.index.tz) - pd.Timedelta(days=365) if getattr(dividends.index, "tz", None) else pd.Timestamp.now() - pd.Timedelta(days=365)
+            recent = dividends[dividends.index >= cutoff]
+            return {
+                "annual_per_share": float(recent.sum()),
+                "payment_count": int(len(recent)),
+            }
+        except Exception as exc:
+            raise RuntimeError(f"Temettu bilgisi alinamadi: {exc}") from exc
+
     def fundamentals(self, symbol: str) -> dict[str, Any]:
         try:
             info = yf.Ticker(symbol.strip().upper()).info

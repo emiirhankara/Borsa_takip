@@ -6,6 +6,8 @@ Borsa Istanbul (`.IS`) ve NYSE/NASDAQ sembollerini Yahoo Finance verisiyle izley
 
 - Birden fazla hisseyi izleme listesine ekleme, satira tiklayarak secilen hissenin grafigini ve gunluk degisimini goruntuleme
 - Gercek Yahoo Finance verilerinden hesaplanan 1 aylik senaryo siralamasi ve tahmini getiri gostergesi
+- Borsa Istanbul ve ABD hisselerini ayri panellerde izleme
+- Secilen hisse icin butce, 1/3/6 aylik vade ve son 12 aydaki gercek temettu odemelerine dayali Test Alisi hesaplamasi
 - Canli fiyat, degisim yuzdesi ve 60 saniyelik otomatik yenileme
 - Hareketli ortalamalar, RSI(14), MACD ve fiyat grafigi
 - 1, 3 ve 6 aylik, gecmis getirilerden uretilen aciklanabilir istatistiksel tahmin

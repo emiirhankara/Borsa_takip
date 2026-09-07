@@ -3,8 +3,9 @@ import webbrowser
 
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtWidgets import (
-    QComboBox, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMainWindow,
-    QMessageBox, QPushButton, QSplitter, QTabWidget, QTextBrowser, QTableWidgetItem, QVBoxLayout, QWidget,
+    QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QGroupBox, QHBoxLayout,
+    QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton, QSplitter, QSpinBox, QTabWidget,
+    QTextBrowser, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
 from analysis.technical import forecast, indicators
@@ -15,15 +16,16 @@ from ui.widgets import ChartCanvas, ResultTable, Worker
 
 
 THEME = """
-QMainWindow, QWidget { background: #0f141b; color: #e9eef5; font-family: 'Segoe UI'; }
-QLineEdit, QComboBox { background: #18212c; border: 1px solid #2b3645; border-radius: 6px; padding: 8px; color: #e9eef5; }
-QPushButton { background: #2878d0; border: 0; border-radius: 6px; padding: 9px 15px; color: white; font-weight: 600; }
+QMainWindow, QWidget { background: #0b1118; color: #e9eef5; font-family: 'Segoe UI'; }
+QLineEdit, QComboBox, QDoubleSpinBox { background: #121b26; border: 1px solid #29384a; border-radius: 4px; padding: 7px; color: #e9eef5; }
+QPushButton { background: #2878d0; border: 0; border-radius: 4px; padding: 8px 13px; color: white; font-weight: 600; }
 QPushButton:hover { background: #3d91ed; }
-QTabWidget::pane, QGroupBox { border: 1px solid #2b3645; border-radius: 8px; margin-top: 8px; }
-QGroupBox::title { subcontrol-origin: margin; left: 12px; padding: 0 5px; color: #8fb9e6; }
+QGroupBox { background: #101821; border: 1px solid #29384a; border-radius: 5px; margin-top: 8px; }
+QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: #b8c7d9; }
 QTableWidget { background: #141a22; alternate-background-color: #18212c; gridline-color: #2b3645; border: 0; }
 QHeaderView::section { background: #1e2b3b; color: #b8c7d9; padding: 7px; border: 0; }
 QTextBrowser { background: #141a22; border: 0; padding: 8px; }
+QSplitter::handle { background: #29384a; }
 """
 
 
@@ -35,6 +37,9 @@ class MainWindow(QMainWindow):
         self.workers = []
         self.current_symbol = DEFAULT_SYMBOL
         self.watchlist = list(DEFAULT_WATCHLIST)
+        self.current_quote = None
+        self.current_predictions = []
+        self.current_dividend = {"annual_per_share": 0.0, "payment_count": 0}
         self.setWindowTitle("PiyasaRadar | BIST & NYSE/NASDAQ")
         self.resize(1380, 860)
         self.setStyleSheet(THEME)
@@ -76,54 +81,108 @@ class MainWindow(QMainWindow):
 
     def _build_dashboard(self):
         page = QWidget()
-        layout = QVBoxLayout(page)
-        watchlist_group = QGroupBox("Hisse listesi - detay için satıra tıklayın")
-        watchlist_layout = QVBoxLayout(watchlist_group)
-        controls = QHBoxLayout()
-        self.watchlist_input = QLineEdit(", ".join(self.watchlist))
-        self.watchlist_input.setPlaceholderText("AAPL, MSFT, THYAO.IS, ASELS.IS")
-        controls.addWidget(self.watchlist_input, 1)
-        watchlist_button = QPushButton("Listeyi yükle")
-        watchlist_button.clicked.connect(self._refresh_watchlist)
-        controls.addWidget(watchlist_button)
-        watchlist_layout.addLayout(controls)
-        self.watchlist_table = ResultTable()
-        self.watchlist_table.setSelectionBehavior(self.watchlist_table.SelectRows)
-        self.watchlist_table.setEditTriggers(self.watchlist_table.NoEditTriggers)
-        self.watchlist_table.cellClicked.connect(self._watchlist_row_clicked)
-        watchlist_layout.addWidget(self.watchlist_table)
+        layout = QHBoxLayout(page)
+        layout.setContentsMargins(6, 6, 6, 6)
+
+        left_panel = QWidget()
+        left_layout = QVBoxLayout(left_panel)
+        left_layout.setContentsMargins(0, 0, 6, 0)
+        self.bist_table, bist_panel = self._build_market_panel(
+            "Borsa İstanbul", ", ".join(symbol for symbol in self.watchlist if symbol.endswith(".IS")), "THYAO.IS, ASELS.IS, BIMAS.IS"
+        )
+        self.us_table, us_panel = self._build_market_panel(
+            "ABD Borsaları", ", ".join(symbol for symbol in self.watchlist if not symbol.endswith(".IS")), "AAPL, MSFT, JNJ"
+        )
+        left_layout.addWidget(bist_panel, 1)
+        load_lists = QPushButton("Listeleri yükle")
+        load_lists.clicked.connect(self._refresh_watchlist)
+        left_layout.addWidget(load_lists)
+        layout.addWidget(left_panel, 1)
+
+        center_panel = QWidget()
+        center_layout = QVBoxLayout(center_panel)
+        center_layout.setContentsMargins(0, 0, 6, 0)
+        self.quote_label = QLabel("Veri yükleniyor...")
+        self.quote_label.setStyleSheet("font-size: 23px; font-weight: 700; padding: 4px 0;")
+        center_layout.addWidget(self.quote_label)
         self.recommendation_label = QLabel("Gerçek veriler yükleniyor...")
         self.recommendation_label.setWordWrap(True)
-        self.recommendation_label.setStyleSheet("color: #f5b041; padding: 4px;")
-        watchlist_layout.addWidget(self.recommendation_label)
-        layout.addWidget(watchlist_group)
-        self.quote_label = QLabel("Veri yükleniyor...")
-        self.quote_label.setStyleSheet("font-size: 22px; font-weight: 600; padding: 10px;")
-        layout.addWidget(self.quote_label)
-        splitter = QSplitter(Qt.Vertical)
+        self.recommendation_label.setStyleSheet("color: #f5b041; padding: 3px 0;")
+        center_layout.addWidget(self.recommendation_label)
         chart_group = QGroupBox("Fiyat ve Hareketli Ortalamalar")
         chart_layout = QVBoxLayout(chart_group)
         self.chart = ChartCanvas()
         chart_layout.addWidget(self.chart)
-        splitter.addWidget(chart_group)
-        lower = QSplitter(Qt.Horizontal)
+        center_layout.addWidget(chart_group, 1)
+        lower = QSplitter(Qt.Vertical)
         forecast_group = QGroupBox("İstatistiksel Öngörü (yatırım tavsiyesi değildir)")
         forecast_layout = QVBoxLayout(forecast_group)
         self.forecast_table = ResultTable()
         forecast_layout.addWidget(self.forecast_table)
         lower.addWidget(forecast_group)
         indicator_group = QGroupBox("Teknik Göstergeler")
-        indicator_layout = QFormLayout(indicator_group)
+        indicator_layout = QHBoxLayout(indicator_group)
         self.rsi_label = QLabel("-")
         self.macd_label = QLabel("-")
         self.sma_label = QLabel("-")
-        indicator_layout.addRow("RSI(14)", self.rsi_label)
-        indicator_layout.addRow("MACD", self.macd_label)
-        indicator_layout.addRow("SMA20 / SMA50", self.sma_label)
+        indicator_layout.addWidget(QLabel("RSI(14)"))
+        indicator_layout.addWidget(self.rsi_label)
+        indicator_layout.addWidget(QLabel("MACD"))
+        indicator_layout.addWidget(self.macd_label)
+        indicator_layout.addWidget(QLabel("SMA20 / SMA50"))
+        indicator_layout.addWidget(self.sma_label)
         lower.addWidget(indicator_group)
-        splitter.addWidget(lower)
-        layout.addWidget(splitter, 1)
+        center_layout.addWidget(lower, 1)
+        layout.addWidget(center_panel, 3)
+
+        order_panel = QGroupBox("Test Alışı")
+        order_layout = QVBoxLayout(order_panel)
+        order_layout.addWidget(QLabel("Sanal yatırım tutarı"))
+        self.test_budget = QDoubleSpinBox()
+        self.test_budget.setRange(1, 1000000000)
+        self.test_budget.setValue(10000)
+        self.test_budget.setDecimals(2)
+        order_layout.addWidget(self.test_budget)
+        order_layout.addWidget(QLabel("Elde tutma süresi"))
+        self.test_months = QComboBox()
+        self.test_months.addItem("1 ay", 1)
+        self.test_months.addItem("3 ay", 3)
+        self.test_months.addItem("6 ay", 6)
+        order_layout.addWidget(self.test_months)
+        self.test_buy_button = QPushButton("Hesapla")
+        self.test_buy_button.setEnabled(False)
+        self.test_buy_button.clicked.connect(self._calculate_test_buy)
+        order_layout.addWidget(self.test_buy_button)
+        self.test_result = QLabel("Bir hisse seçip tutar ve süre girin.")
+        self.test_result.setWordWrap(True)
+        self.test_result.setStyleSheet("color: #b8c7d9; padding-top: 8px;")
+        order_layout.addWidget(self.test_result)
+        order_layout.addStretch()
+        right_panel = QWidget()
+        right_layout = QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.addWidget(us_panel, 1)
+        right_layout.addWidget(order_panel, 1)
+        layout.addWidget(right_panel, 1)
         return page
+
+    def _build_market_panel(self, title, symbols, placeholder):
+        panel = QGroupBox(title)
+        layout = QVBoxLayout(panel)
+        input_field = QLineEdit(symbols)
+        input_field.setPlaceholderText(placeholder)
+        input_field.returnPressed.connect(self._refresh_watchlist)
+        layout.addWidget(input_field)
+        table = ResultTable()
+        table.setSelectionBehavior(table.SelectRows)
+        table.setEditTriggers(table.NoEditTriggers)
+        table.cellClicked.connect(self._watchlist_row_clicked)
+        layout.addWidget(table)
+        if title.startswith("Borsa"):
+            self.bist_input = input_field
+        else:
+            self.us_watchlist_input = input_field
+        return table, panel
 
     def _build_dividend_tab(self):
         page = QWidget()
@@ -177,7 +236,8 @@ class MainWindow(QMainWindow):
         self._run(self.market.financial_tables, self._present_financials, symbol)
 
     def _symbols_from_input(self):
-        symbols = [item.strip().upper() for item in self.watchlist_input.text().replace(";", ",").split(",") if item.strip()]
+        text = f"{self.bist_input.text()},{self.us_watchlist_input.text()}"
+        symbols = [item.strip().upper() for item in text.replace(";", ",").split(",") if item.strip()]
         return list(dict.fromkeys(symbols))
 
     def _refresh_watchlist(self):
@@ -219,7 +279,9 @@ class MainWindow(QMainWindow):
              f"{row['forecast_pct']:+.2f}%", row["signal"], row["confidence"]]
             for row in rows
         ]
-        self.watchlist_table.load_rows(table_rows, ["Sembol", "Son fiyat", "Günlük değişim", "1 ay senaryosu", "Sinyal", "Güven"])
+        headers = ["Sembol", "Son fiyat", "Günlük değişim", "1 ay senaryosu", "Sinyal", "Güven"]
+        self.bist_table.load_rows([row for row in table_rows if row[0].endswith(".IS")], headers)
+        self.us_table.load_rows([row for row in table_rows if not row[0].endswith(".IS")], headers)
         best = rows[0]
         self.recommendation_label.setText(
             f"Veriye dayalı 1 ay senaryosunda en yüksek tahmini getiri: {best['symbol']} "
@@ -229,16 +291,23 @@ class MainWindow(QMainWindow):
         self._load_symbol(best["symbol"], load_watchlist=False)
 
     def _watchlist_row_clicked(self, row, _column):
-        symbol_item = self.watchlist_table.item(row, 0)
+        table = self.sender()
+        symbol_item = table.item(row, 0)
         if symbol_item:
             self._load_symbol(symbol_item.text(), load_watchlist=False)
 
     def _fetch_dashboard(self, symbol):
         history = self.market.history(symbol)
-        return self.market.quote(symbol), indicators(history), forecast(history)
+        return self.market.quote(symbol), indicators(history), forecast(history), self.market.dividend_info(symbol)
 
     def _present_dashboard(self, payload):
-        quote, frame, predictions = payload
+        quote, frame, predictions, dividend = payload
+        self.current_quote = quote
+        self.current_predictions = predictions
+        self.current_dividend = dividend
+        self.test_buy_button.setEnabled(True)
+        self.test_budget.setSuffix(f" {quote['currency']}")
+        self.test_result.setText("Tutar ve süreyi seçip Hesapla düğmesine basın.")
         color = "#58d68d" if quote["change"] >= 0 else "#ed6a5a"
         self.quote_label.setText(f"{quote['symbol']}   {quote['price']:.2f} {quote['currency']}   <span style='color:{color}'>{quote['change']:+.2f} ({quote['change_pct']:+.2f}%)</span>")
         self.chart.plot(frame)
@@ -248,6 +317,29 @@ class MainWindow(QMainWindow):
         self.sma_label.setText(f"{latest['SMA20']:.2f} / {latest['SMA50']:.2f}")
         rows = [[item.horizon, f"{item.target_price:.2f}", f"{item.change_pct:+.2f}%", item.signal, item.confidence] for item in predictions]
         self.forecast_table.load_rows(rows, ["Vade", "Tahmini Fiyat", "Potansiyel", "Sinyal", "Güven"])
+
+    def _calculate_test_buy(self):
+        if not self.current_quote or not self.current_predictions:
+            return
+        selected_months = self.test_months.currentData()
+        selected = next(item for item in self.current_predictions if item.horizon.startswith(str(selected_months)))
+        budget = self.test_budget.value()
+        shares = budget / self.current_quote["price"]
+        price_profit = budget * selected.change_pct / 100
+        dividend_per_share = self.current_dividend["annual_per_share"] * selected_months / 12
+        dividend_profit = shares * dividend_per_share
+        total_profit = price_profit + dividend_profit
+        total_pct = total_profit / budget * 100
+        currency = self.current_quote["currency"]
+        self.test_result.setText(
+            f"<b>{self.current_quote['symbol']}</b><br>"
+            f"Alınabilecek miktar: {shares:.4f} hisse<br>"
+            f"Fiyat senaryosu: {price_profit:+.2f} {currency} ({selected.change_pct:+.2f}%)<br>"
+            f"Tahmini temettü: {dividend_profit:+.2f} {currency}<br>"
+            f"Toplam değişim: <b>{total_profit:+.2f} {currency} ({total_pct:+.2f}%)</b><br>"
+            f"Son 12 ay ödeme sayısı: {self.current_dividend['payment_count']}<br><br>"
+            "Geçmiş veriye dayalı senaryodur, garanti edilmiş kazanç değildir."
+        )
 
     def _present_news(self, articles):
         if not articles:
