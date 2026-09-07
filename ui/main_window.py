@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
         self.resize(1380, 860)
         self.setStyleSheet(THEME)
         self._build_ui()
-        self._load_symbol(DEFAULT_SYMBOL)
+        QTimer.singleShot(250, lambda: self._load_symbol(DEFAULT_SYMBOL))
         self.timer = QTimer(self)
         self.timer.timeout.connect(lambda: self._load_symbol(self.symbol_input.text()))
         self.timer.start(REFRESH_SECONDS * 1000)
@@ -201,4 +201,11 @@ class MainWindow(QMainWindow):
 
     def _show_error(self, message):
         self.status.setText("Veri alınamadı")
-        QMessageBox.warning(self, "Veri hatası", message)
+        self.quote_label.setText(f"<span style='color:#ed6a5a'>Veri alınamadı:</span> {message}")
+
+    def closeEvent(self, event):
+        for worker in self.workers:
+            worker.requestInterruption()
+            worker.quit()
+            worker.wait(1500)
+        event.accept()

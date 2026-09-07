@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\run.py", line 20, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\Acer\Desktop\hisse\run.py", line 8, in main
+    from PyQt5.QtWidgets import QApplication
+ModuleNotFoundError: No module named 'PyQt5'

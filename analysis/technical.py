@@ -25,7 +25,10 @@ def indicators(data: pd.DataFrame) -> pd.DataFrame:
     delta = close.diff()
     gains = delta.clip(lower=0).rolling(14).mean()
     losses = -delta.clip(upper=0).rolling(14).mean()
-    result["RSI"] = 100 - (100 / (1 + gains / losses.replace(0, np.nan)))
+    relative_strength = gains.div(losses.replace(0, np.nan))
+    rsi = 100 - (100 / (1 + relative_strength))
+    fallback_rsi = pd.Series(np.where(gains > 0, 100.0, 50.0), index=gains.index)
+    result["RSI"] = rsi.fillna(fallback_rsi)
     return result
 
 
@@ -33,6 +36,8 @@ def forecast(data: pd.DataFrame) -> list[Forecast]:
     if len(data) < 30:
         raise ValueError("Tahmin icin en az 30 gunluk veri gerekir.")
     frame = indicators(data).dropna()
+    if frame.empty:
+        raise ValueError("Tahmin icin yeterli ve gecerli fiyat verisi gerekir.")
     close = frame["Close"].astype(float)
     daily_returns = close.pct_change().dropna()
     drift = float(daily_returns.tail(60).mean())

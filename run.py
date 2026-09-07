@@ -1,10 +1,13 @@
 """BIST ve ABD hisseleri icin masaustu takip uygulamasi."""
 import sys
-from PyQt5.QtWidgets import QApplication
-from ui.main_window import MainWindow
+import traceback
+from pathlib import Path
 
 
 def main() -> int:
+    from PyQt5.QtWidgets import QApplication
+    from ui.main_window import MainWindow
+
     app = QApplication(sys.argv)
     app.setApplicationName("PiyasaRadar")
     window = MainWindow()
@@ -13,4 +16,21 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except Exception:
+        error_text = traceback.format_exc()
+        Path(__file__).with_name("startup_error.log").write_text(error_text, encoding="utf-8")
+        print(error_text, file=sys.stderr)
+        try:
+            from PyQt5.QtWidgets import QApplication, QMessageBox
+
+            app = QApplication.instance() or QApplication(sys.argv)
+            QMessageBox.critical(
+                None,
+                "PiyasaRadar başlatılamadı",
+                "Uygulama başlatılırken hata oluştu. Ayrıntılar startup_error.log dosyasına kaydedildi.",
+            )
+        finally:
+            input("Kapatmak için Enter'a basın...")
+        raise
