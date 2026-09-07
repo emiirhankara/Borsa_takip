@@ -4,6 +4,8 @@ Borsa Istanbul (`.IS`) ve NYSE/NASDAQ sembollerini Yahoo Finance verisiyle izley
 
 ## Ozellikler
 
+- Birden fazla hisseyi izleme listesine ekleme, satira tiklayarak secilen hissenin grafigini ve gunluk degisimini goruntuleme
+- Gercek Yahoo Finance verilerinden hesaplanan 1 aylik senaryo siralamasi ve tahmini getiri gostergesi
 - Canli fiyat, degisim yuzdesi ve 60 saniyelik otomatik yenileme
 - Hareketli ortalamalar, RSI(14), MACD ve fiyat grafigi
 - 1, 3 ve 6 aylik, gecmis getirilerden uretilen aciklanabilir istatistiksel tahmin
@@ -29,6 +31,8 @@ Linux/macOS icin sanal ortam etkinlestirme komutu `.venv/bin/activate` olur.
 
 - ABD: `AAPL`, `MSFT`, `O`, `MAIN`
 - Borsa Istanbul: `THYAO.IS`, `ASELS.IS`, `BIMAS.IS`
+
+Genel Bakis sekmesindeki hisse listesine sembolleri virgulle ayirarak yazabilirsiniz. Bir satira tikladiginizda secilen hissenin grafigi, gunluk yukselis/dusus orani, teknik gostergeleri ve tahmin tablosu gosterilir. Liste, 1 aylik istatistiksel senaryo getirisine gore siralanir. Bu siralama kesin kazanc veya yatirim tavsiyesi degildir.
 
 ## Veri ve tahmin notu
 

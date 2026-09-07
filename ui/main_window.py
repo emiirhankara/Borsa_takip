@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
 )
 
 from analysis.technical import forecast, indicators
-from config import BIST_EXAMPLES, DEFAULT_SYMBOL, NEWS_LIMIT, REFRESH_SECONDS, US_SYMBOLS
+from config import BIST_EXAMPLES, DEFAULT_SYMBOL, DEFAULT_WATCHLIST, NEWS_LIMIT, REFRESH_SECONDS, US_SYMBOLS
 from services.market_data import MarketDataService
 from services.news import NewsService
 from ui.widgets import ChartCanvas, ResultTable, Worker
@@ -34,13 +34,14 @@ class MainWindow(QMainWindow):
         self.news = NewsService()
         self.workers = []
         self.current_symbol = DEFAULT_SYMBOL
+        self.watchlist = list(DEFAULT_WATCHLIST)
         self.setWindowTitle("PiyasaRadar | BIST & NYSE/NASDAQ")
         self.resize(1380, 860)
         self.setStyleSheet(THEME)
         self._build_ui()
-        QTimer.singleShot(250, lambda: self._load_symbol(DEFAULT_SYMBOL))
+        QTimer.singleShot(250, self._refresh_watchlist)
         self.timer = QTimer(self)
-        self.timer.timeout.connect(lambda: self._load_symbol(self.symbol_input.text()))
+        self.timer.timeout.connect(self._refresh_watchlist)
         self.timer.start(REFRESH_SECONDS * 1000)
 
     def _build_ui(self):
@@ -57,7 +58,7 @@ class MainWindow(QMainWindow):
         self.symbol_input.returnPressed.connect(lambda: self._load_symbol(self.symbol_input.text()))
         header.addWidget(self.symbol_input, 1)
         refresh = QPushButton("Yenile")
-        refresh.clicked.connect(lambda: self._load_symbol(self.symbol_input.text()))
+        refresh.clicked.connect(self._refresh_watchlist)
         header.addWidget(refresh)
         self.status = QLabel("Hazır")
         self.status.setStyleSheet("color: #9aa7b8;")
@@ -76,6 +77,26 @@ class MainWindow(QMainWindow):
     def _build_dashboard(self):
         page = QWidget()
         layout = QVBoxLayout(page)
+        watchlist_group = QGroupBox("Hisse listesi - detay için satıra tıklayın")
+        watchlist_layout = QVBoxLayout(watchlist_group)
+        controls = QHBoxLayout()
+        self.watchlist_input = QLineEdit(", ".join(self.watchlist))
+        self.watchlist_input.setPlaceholderText("AAPL, MSFT, THYAO.IS, ASELS.IS")
+        controls.addWidget(self.watchlist_input, 1)
+        watchlist_button = QPushButton("Listeyi yükle")
+        watchlist_button.clicked.connect(self._refresh_watchlist)
+        controls.addWidget(watchlist_button)
+        watchlist_layout.addLayout(controls)
+        self.watchlist_table = ResultTable()
+        self.watchlist_table.setSelectionBehavior(self.watchlist_table.SelectRows)
+        self.watchlist_table.setEditTriggers(self.watchlist_table.NoEditTriggers)
+        self.watchlist_table.cellClicked.connect(self._watchlist_row_clicked)
+        watchlist_layout.addWidget(self.watchlist_table)
+        self.recommendation_label = QLabel("Gerçek veriler yükleniyor...")
+        self.recommendation_label.setWordWrap(True)
+        self.recommendation_label.setStyleSheet("color: #f5b041; padding: 4px;")
+        watchlist_layout.addWidget(self.recommendation_label)
+        layout.addWidget(watchlist_group)
         self.quote_label = QLabel("Veri yükleniyor...")
         self.quote_label.setStyleSheet("font-size: 22px; font-weight: 600; padding: 10px;")
         layout.addWidget(self.quote_label)
@@ -146,7 +167,7 @@ class MainWindow(QMainWindow):
         worker.finished.connect(lambda: self.workers.remove(worker) if worker in self.workers else None)
         worker.start()
 
-    def _load_symbol(self, symbol):
+    def _load_symbol(self, symbol, load_watchlist=True):
         symbol = symbol.strip().upper()
         if not symbol:
             return
@@ -154,6 +175,63 @@ class MainWindow(QMainWindow):
         self._run(self._fetch_dashboard, self._present_dashboard, symbol)
         self._run(self.news.fetch, self._present_news, symbol, NEWS_LIMIT)
         self._run(self.market.financial_tables, self._present_financials, symbol)
+
+    def _symbols_from_input(self):
+        symbols = [item.strip().upper() for item in self.watchlist_input.text().replace(";", ",").split(",") if item.strip()]
+        return list(dict.fromkeys(symbols))
+
+    def _refresh_watchlist(self):
+        symbols = self._symbols_from_input()
+        if not symbols:
+            self.status.setText("En az bir sembol girin")
+            return
+        self.watchlist = symbols
+        self._run(self._fetch_watchlist, self._present_watchlist, symbols)
+
+    def _fetch_watchlist(self, symbols):
+        rows = []
+        for symbol in symbols:
+            try:
+                history = self.market.history(symbol)
+                quote = self.market.quote(symbol)
+                predictions = forecast(history)
+                one_month = predictions[0]
+                rows.append({
+                    "symbol": quote["symbol"],
+                    "price": quote["price"],
+                    "currency": quote["currency"],
+                    "change_pct": quote["change_pct"],
+                    "forecast_pct": one_month.change_pct,
+                    "signal": one_month.signal,
+                    "confidence": one_month.confidence,
+                })
+            except Exception:
+                continue
+        return rows
+
+    def _present_watchlist(self, rows):
+        if not rows:
+            self.recommendation_label.setText("Gösterilecek geçerli hisse bulunamadı.")
+            return
+        rows.sort(key=lambda row: row["forecast_pct"], reverse=True)
+        table_rows = [
+            [row["symbol"], f"{row['price']:.2f} {row['currency']}", f"{row['change_pct']:+.2f}%",
+             f"{row['forecast_pct']:+.2f}%", row["signal"], row["confidence"]]
+            for row in rows
+        ]
+        self.watchlist_table.load_rows(table_rows, ["Sembol", "Son fiyat", "Günlük değişim", "1 ay senaryosu", "Sinyal", "Güven"])
+        best = rows[0]
+        self.recommendation_label.setText(
+            f"Veriye dayalı 1 ay senaryosunda en yüksek tahmini getiri: {best['symbol']} "
+            f"({best['forecast_pct']:+.2f}%, güven: {best['confidence']}). "
+            "Bu bir garanti veya yatırım tavsiyesi değildir; geçmiş fiyat verisine dayalı istatistiksel tahmindir."
+        )
+        self._load_symbol(best["symbol"], load_watchlist=False)
+
+    def _watchlist_row_clicked(self, row, _column):
+        symbol_item = self.watchlist_table.item(row, 0)
+        if symbol_item:
+            self._load_symbol(symbol_item.text(), load_watchlist=False)
 
     def _fetch_dashboard(self, symbol):
         history = self.market.history(symbol)
