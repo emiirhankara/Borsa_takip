@@ -3,12 +3,12 @@ import webbrowser
 
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtWidgets import (
-    QComboBox, QDoubleSpinBox, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMainWindow,
+    QComboBox, QDoubleSpinBox, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMainWindow,
     QPushButton, QSplitter, QTabWidget, QTextBrowser, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
 from analysis.technical import forecast, indicators
-from config import BIST_EXAMPLES, DEFAULT_SYMBOL, DEFAULT_WATCHLIST, NEWS_LIMIT, REFRESH_SECONDS, US_SYMBOLS
+from config import DEFAULT_SYMBOL, DEFAULT_WATCHLIST, NEWS_LIMIT, REFRESH_SECONDS, US_SYMBOLS
 from services.market_data import MarketDataService
 from services.news import NewsService
 from ui.widgets import ChartCanvas, ResultTable, Worker
@@ -239,7 +239,7 @@ class MainWindow(QMainWindow):
         worker.finished.connect(lambda: self.workers.remove(worker) if worker in self.workers else None)
         worker.start()
 
-    def _load_symbol(self, symbol, load_watchlist=True):
+    def _load_symbol(self, symbol):
         symbol = symbol.strip().upper()
         if not symbol:
             return
@@ -270,7 +270,7 @@ class MainWindow(QMainWindow):
             "Bir hisse seçerek ayrıntılı grafik ve tahminini açın."
         )
         if bist_rows:
-            self._load_symbol(bist_rows[0]["symbol"], load_watchlist=False)
+            self._load_symbol(bist_rows[0]["symbol"])
 
     def _load_market_table(self, table, rows):
         table_rows = [
@@ -283,7 +283,7 @@ class MainWindow(QMainWindow):
         table = self.sender()
         symbol_item = table.item(row, 0)
         if symbol_item:
-            self._load_symbol(symbol_item.text(), load_watchlist=False)
+            self._load_symbol(symbol_item.text())
 
     def _fetch_dashboard(self, symbol):
         history = self.market.history(symbol)
