@@ -13,6 +13,8 @@ Borsa Istanbul (`.IS`) ve NYSE/NASDAQ sembollerini Yahoo Finance verisiyle izley
 - 1, 3 ve 6 aylik, gecmis getirilerden uretilen aciklanabilir istatistiksel tahmin
 - ABD sembolleri icin son yaklasik 12 ayda her ay temettu odemesi gorulenleri listeleme
 - Yahoo Finance RSS haber akisi
+- ABD temettu hisseleri icin sembol, borsa, fiyat, temettu verimi ve son 12 ay odeme sayisi filtreleri
+- Haber basligi ve kisa ozet akisi; habere tiklayinca uygulama ici detay gorunumu
 - Gelir tablosu, bilanco ve nakit akisinin tablo gorunumu
 - Ag hatalarinda QMessageBox ile kullaniciya bildirim
 

@@ -1,0 +1,22 @@
+2026-09-07 21:28:23,059 ERROR ui.widgets: Worker hatasi: <bound method MainWindow._fetch_dashboard of <ui.main_window.MainWindow object at 0x0000022356A04170>>
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\ui\widgets.py", line 105, in run
+    self.succeeded.emit(self.function(*self.args, **self.kwargs))
+                        ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\ui\main_window.py", line 444, in _fetch_dashboard
+    history = self.market.history(symbol)
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 103, in history
+    symbol = self._clean_symbol(symbol)
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 34, in _clean_symbol
+    raise ValueError("Geçersiz hisse sembolü.")
+ValueError: Geçersiz hisse sembolü.
+2026-09-07 21:28:28,657 ERROR ui.widgets: Worker hatasi: <bound method MarketDataService.financial_tables of <services.market_data.MarketDataService object at 0x00000223568CF770>>
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\ui\widgets.py", line 105, in run
+    self.succeeded.emit(self.function(*self.args, **self.kwargs))
+                        ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 198, in financial_tables
+    symbol = self._clean_symbol(symbol)
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 34, in _clean_symbol
+    raise ValueError("Geçersiz hisse sembolü.")
+ValueError: Geçersiz hisse sembolü.
