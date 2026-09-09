@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
 
 from analysis.geopolitical import assess_news
 from analysis.technical import forecast, indicators
-from config import BASE_DIR, CACHE_DIR, DEFAULT_SYMBOL, DEFAULT_WATCHLIST, NEWS_LIMIT, REFRESH_SECONDS
+from config import BASE_DIR, CACHE_DIR, DEFAULT_SYMBOL, DEFAULT_WATCHLIST, NEWS_LIMIT, REFRESH_SECONDS, BIST_POPULAR, US_POPULAR
 from services.market_data import MarketDataService
 from services.news import NewsService
 from ui.detail_view import StockDetailView
@@ -205,13 +205,9 @@ class MainWindow(QMainWindow):
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(0, 0, 0, 0)
         self.bist_table, bist_panel = self._build_market_panel(
-            "Borsa İstanbul", ", ".join(symbol for symbol in self.watchlist if symbol.endswith(".IS")), "THYAO.IS, ASELS.IS, BIMAS.IS", is_bist=True
+            "Borsa İstanbul", ", ".join(BIST_POPULAR), "THYAO.IS, ASELS.IS, BIMAS.IS, TUPRS.IS, GARAN.IS...", is_bist=True
         )
-        self.load_lists_button = QPushButton("Listeleri yükle")
-        self.load_lists_button.setToolTip("Borsa İstanbul ve ABD hisse listelerini yükle")
-        self.load_lists_button.clicked.connect(lambda: self._refresh_watchlist(self.load_lists_button))
         left_layout.addWidget(bist_panel, 1)
-        left_layout.addWidget(self.load_lists_button)
         splitter.addWidget(left_panel)
         
         # Right panel: ABD Borsaları
@@ -219,7 +215,7 @@ class MainWindow(QMainWindow):
         right_layout = QVBoxLayout(right_panel)
         right_layout.setContentsMargins(0, 0, 0, 0)
         self.us_table, us_panel = self._build_market_panel(
-            "ABD Borsaları", ", ".join(symbol for symbol in self.watchlist if not symbol.endswith(".IS")), "AAPL, MSFT, JNJ", is_bist=False
+            "ABD Borsaları", ", ".join(US_POPULAR), "AAPL, MSFT, NVDA, AMZN, GOOGL, META, TSLA...", is_bist=False
         )
         right_layout.addWidget(us_panel, 1)
         splitter.addWidget(right_panel)
@@ -230,6 +226,19 @@ class MainWindow(QMainWindow):
         splitter.setCollapsible(1, False)
         
         layout.addWidget(splitter, 1)
+        
+        # Centered refresh button below both market panels
+        btn_layout = QHBoxLayout()
+        btn_layout.setContentsMargins(0, 6, 0, 4)
+        btn_layout.addStretch()
+        self.load_lists_button = QPushButton("🔄 Listeleri Güncelle")
+        self.load_lists_button.setToolTip("Borsa İstanbul ve ABD hisse listelerini güncelle")
+        self.load_lists_button.setFixedWidth(220)
+        self.load_lists_button.setFixedHeight(36)
+        self.load_lists_button.clicked.connect(lambda: self._refresh_watchlist(self.load_lists_button))
+        btn_layout.addWidget(self.load_lists_button)
+        btn_layout.addStretch()
+        layout.addLayout(btn_layout)
         
         return page
 
@@ -376,28 +385,16 @@ class MainWindow(QMainWindow):
     def _build_financial_tab(self):
         page = QWidget()
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(12, 12, 12, 12)
-        layout.setSpacing(10)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
         
-        # Info bar
-        info_frame = QFrame()
-        info_frame.setStyleSheet("QFrame { background: #101821; border: 1px solid #29384a; border-radius: 4px; }")
-        info_layout = QHBoxLayout(info_frame)
-        info_layout.setContentsMargins(10, 8, 10, 8)
-        self.financial_status = QLabel("Bir hisse seçildiğinde finansal tablolar burada yüklenir.")
-        self.financial_status.setStyleSheet("color: #b8c7d9; font-size: 12px; font-weight: 500;")
-        info_layout.addWidget(self.financial_status)
-        layout.addWidget(info_frame)
-        
-        # Empty state
-        self.financial_empty_state = EmptyStateWidget("📄", "Henüz veri yok", "Bir hisse seçildiğinde finansal tablolar burada yüklenir.")
+        # Guiding empty state
+        self.financial_empty_state = EmptyStateWidget(
+            "📄",
+            "Hisse Finansalları ve Bilançolar",
+            "Bir hissenin gelir tablosunu, bilançosunu ve nakit akışını incelemek için Genel Bakış listesinden ilgili hisseye tıklayın.\nFinansal veriler doğrudan hissenin detay sayfasında sunulmaktadır."
+        )
         layout.addWidget(self.financial_empty_state, 1)
-        
-        # Tables container
-        self.financial_tables = QTabWidget()
-        self.financial_tables.hide()
-        layout.addWidget(self.financial_tables, 1)
-        
         return page
 
     def _build_news_tab(self):
@@ -406,24 +403,24 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(10)
         
-        # Info bar
+        # Top Info bar
         info_frame = QFrame()
         info_frame.setStyleSheet("QFrame { background: #101821; border: 1px solid #29384a; border-radius: 4px; }")
         info_layout = QHBoxLayout(info_frame)
-        info_layout.setContentsMargins(10, 8, 10, 8)
-        self.news_status = QLabel("Bir hisse seçildiğinde güncel haberler burada yüklenir.")
+        info_layout.setContentsMargins(12, 8, 12, 8)
+        self.news_status = QLabel("📰 Güncel Piyasa ve Hisse Haber Akışı")
         self.news_status.setStyleSheet("color: #b8c7d9; font-size: 12px; font-weight: 500;")
         info_layout.addWidget(self.news_status)
         layout.addWidget(info_frame)
         
         # Empty state
-        self.news_empty_state = EmptyStateWidget("📰", "Henüz haber yok", "Bir hisse seçildiğinde güncel haberler burada yüklenir.")
+        self.news_empty_state = EmptyStateWidget("📰", "Henüz haber yüklenmedi", "Bir hisse seçildiğinde güncel haberler burada listelenir.")
         layout.addWidget(self.news_empty_state, 1)
         
-        # Splitter container
-        self.news_splitter = QSplitter(Qt.Vertical)
+        # Splitter container - Horizontal Blog + Reader Layout
+        self.news_splitter = QSplitter(Qt.Horizontal)
         self.news_splitter.setStyleSheet(
-            "QSplitter::handle { background: #29384a; min-height: 4px; } "
+            "QSplitter::handle { background: #29384a; width: 4px; } "
             "QSplitter::handle:hover { background: #3d91ed; }"
         )
         
@@ -435,9 +432,10 @@ class MainWindow(QMainWindow):
         
         self.news_detail = QTextBrowser()
         self.news_detail.setOpenExternalLinks(True)
-        self.news_detail.setPlaceholderText("Detayını görmek için bir habere tıklayın.")
+        self.news_detail.setPlaceholderText("Detayını görmek için soldaki haberlerden birine tıklayın.")
         self.news_splitter.addWidget(self.news_detail)
         
+        self.news_splitter.setSizes([650, 450])
         self.news_splitter.hide()
         layout.addWidget(self.news_splitter, 1)
         
@@ -499,16 +497,13 @@ class MainWindow(QMainWindow):
     def _on_tab_changed(self, index):
         if index == 1 and not self.dividend_loaded:
             self._load_dividend_universe()
-        elif index in {2, 3}:
+        elif index == 3:
             self._load_context_for_current_tab()
 
     def _load_context_for_current_tab(self):
         if not self.current_symbol:
             return
-        if self.tabs.currentIndex() == 2 and self.financials_loaded_symbol != self.current_symbol:
-            self.financials_loaded_symbol = self.current_symbol
-            self._run(self.market.financial_tables, self._present_financials, self.current_symbol, context="Finansal tablolar")
-        elif self.tabs.currentIndex() == 3 and self.news_loaded_symbol != self.current_symbol:
+        if self.tabs.currentIndex() == 3 and self.news_loaded_symbol != self.current_symbol:
             self.news_loaded_symbol = self.current_symbol
             self._run(self.news.fetch, self._present_news, self.current_symbol, NEWS_LIMIT, context="Haberler")
 
@@ -551,8 +546,8 @@ class MainWindow(QMainWindow):
                 return None
         
         rows = []
-        # Parallelize with up to 8 workers to fetch multiple symbols concurrently
-        with ThreadPoolExecutor(max_workers=8) as executor:
+        # Parallelize with up to 16 workers to fetch multiple symbols concurrently
+        with ThreadPoolExecutor(max_workers=16) as executor:
             results = executor.map(fetch_symbol_data, symbols)
             for result in results:
                 if result is not None:
@@ -750,55 +745,113 @@ class MainWindow(QMainWindow):
                 self.detail_view.news_browser.setText("Bu sembol için haber bulunamadı.")
             return
 
-        self.news_status.setText(f"{self.current_symbol} güncel haber akışı ({len(articles)} haber)")
-        html = "".join(
-            f"<article style='padding:8px;border-bottom:1px solid #29384a;'>"
-            f"<a href='{item['link']}'><b>{item['title']}</b></a><br>"
-            f"<small>{item.get('source', 'Yahoo Finance')} | {item['published']}</small><br>"
-            f"<span>{item.get('summary', '')}</span></article>"
-            for item in articles
-        )
-        self.news_browser.setHtml(html)
+        self.news_status.setText(f"📰 {self.current_symbol} Güncel Blog ve Haber Akışı ({len(articles)} haber)")
+        
+        cards_html = []
+        for i, item in enumerate(articles):
+            source = item.get("source", "Finans Haber")
+            date_str = item.get("published", "")
+            title = item.get("title", "")
+            summary = item.get("summary", "")
+            link = item.get("link", "#")
+            badge_color = "#1e3a5f" if i % 2 == 0 else "#2a2238"
+            badge_text_color = "#5dade2" if i % 2 == 0 else "#bb86fc"
+            badge_name = "PİYASA HABERİ" if i % 2 == 0 else "GELİŞME"
+
+            card = f"""
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 12px; background-color: #121c27; border: 1px solid #233446; border-radius: 6px;">
+                <tr>
+                    <td style="padding: 12px 14px;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td>
+                                    <span style="background-color: {badge_color}; color: {badge_text_color}; font-size: 10px; font-weight: bold; padding: 2px 6px;">{badge_name}</span>
+                                    &nbsp;
+                                    <span style="background-color: #1a2736; color: #8fa0b5; font-size: 11px; padding: 2px 6px;">📰 {source}</span>
+                                </td>
+                                <td align="right">
+                                    <span style="color: #65778a; font-size: 11px;">📅 {date_str}</span>
+                                </td>
+                            </tr>
+                        </table>
+                        <div style="margin-top: 8px; margin-bottom: 6px;">
+                            <a href="{link}" style="text-decoration: none; color: #58d68d; font-size: 13px; font-weight: bold;">
+                                {title}
+                            </a>
+                        </div>
+                        <div style="color: #b0c0d0; font-size: 12px; line-height: 1.4; margin-bottom: 8px;">
+                            {summary}
+                        </div>
+                        <div align="right">
+                            <a href="{link}" style="text-decoration: none; color: #3d91ed; font-size: 11px; font-weight: bold;">
+                                Haberi Oku ➔
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            """
+            cards_html.append(card)
+
+        full_html = f"""
+        <div style="padding: 4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            {"".join(cards_html)}
+        </div>
+        """
+        self.news_browser.setHtml(full_html)
         self.news_empty_state.hide()
         self.news_splitter.show()
         if hasattr(self, "detail_view"):
-            self.detail_view.news_browser.setHtml(html)
+            self.detail_view.news_browser.setHtml(full_html)
 
     def _show_news_detail(self, url):
         link = url.toString()
         article = next((item for item in self.current_news if item.get("link") == link), None)
         if not article:
             return
-        content = (
-            f"<h2>{article['title']}</h2>"
-            f"<p><small>{article.get('source', 'Yahoo Finance')} | {article['published']}</small></p>"
-            f"<p>{article.get('summary', 'Detay bulunamadı.')}</p>"
-            f"<p><a href='{article['link']}'>Kaynak haberi aç</a></p>"
-        )
-        self.news_detail.setHtml(content)
+        source = article.get("source", "Haber Kaynağı")
+        published = article.get("published", "")
+        title = article.get("title", "")
+        summary = article.get("summary", "Detay bulunamadı.")
+        
+        detail_html = f"""
+        <div style="padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0d151e; color: #d0dbe5;">
+            <div style="margin-bottom: 12px;">
+                <span style="background-color: #1e3a5f; color: #5dade2; font-size: 11px; font-weight: bold; padding: 3px 8px;">HABER DETAYI</span>
+                &nbsp;
+                <span style="background-color: #1a2736; color: #9aa7b8; font-size: 11px; padding: 3px 8px;">🏛️ {source}</span>
+                &nbsp;
+                <span style="color: #768b9e; font-size: 11px;">🕒 {published}</span>
+            </div>
+            
+            <h2 style="color: #ffffff; font-size: 16px; font-weight: bold; line-height: 1.3; margin-top: 0; margin-bottom: 12px; border-bottom: 1px solid #233446; padding-bottom: 10px;">
+                {title}
+            </h2>
+            
+            <div style="font-size: 13px; line-height: 1.6; color: #c4d4e3; margin-bottom: 20px; background-color: #121c27; padding: 14px; border: 1px solid #223347; border-radius: 4px;">
+                <p style="margin: 0;">{summary}</p>
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #1c2b3a;">
+                <p style="font-size: 12px; color: #8fa0b5; margin-bottom: 10px;">Haberi orijinal web sitesinde okumak için aşağıdaki bağlantıya tıklayabilirsiniz:</p>
+                <table cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="background-color: #2878d0; padding: 8px 16px; border-radius: 4px;">
+                            <a href="{article['link']}" style="color: #ffffff; text-decoration: none; font-weight: bold; font-size: 12px;">
+                                🌐 Orijinal Kaynakta Aç ({source}) ↗
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        """
+        self.news_detail.setHtml(detail_html)
         if hasattr(self, "detail_view"):
-            self.detail_view.news_detail.setHtml(content)
+            self.detail_view.news_detail.setHtml(detail_html)
 
     def _present_financials(self, tables):
-        # Update main window financial tab
-        self.financial_status.setText(f"{self.current_symbol} finansal tabloları")
-        self.financial_tables.clear()
-        if tables:
-            for name, frame in tables.items():
-                table = ResultTable()
-                if frame.empty:
-                    table.load_rows([], ["Kalem"])
-                else:
-                    rows = [[index] + [value if value == value else "-" for value in row] for index, row in frame.head(30).iterrows()]
-                    table.load_rows(rows, ["Kalem"] + [str(column)[:10] for column in frame.columns])
-                self.financial_tables.addTab(table, name)
-            self.financial_empty_state.hide()
-            self.financial_tables.show()
-        else:
-            self.financial_tables.hide()
-            self.financial_empty_state.show()
-
-        # Update detail view financial tab
+        # Update detail view financial tab only (main window financial tab guides user to select a stock)
         if hasattr(self, "detail_view"):
             self.detail_view.financial_tables.clear()
             self.detail_view.financial_empty_label.setVisible(not tables)

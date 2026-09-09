@@ -4,10 +4,7 @@ Traceback (most recent call last):
                      ~~~~^^
   File "C:\Users\Acer\Desktop\hisse\run.py", line 23, in main
     window = MainWindow()
-  File "C:\Users\Acer\Desktop\hisse\ui\main_window.py", line 74, in __init__
-    self._build_ui()
-    ~~~~~~~~~~~~~~^^
-  File "C:\Users\Acer\Desktop\hisse\ui\main_window.py", line 104, in _build_ui
-    self.status_bar_frame = QFrame()
-                            ^^^^^^
-NameError: name 'QFrame' is not defined
+  File "C:\Users\Acer\Desktop\hisse\ui\main_window.py", line 87, in __init__
+    self.setWindowIcon(QIcon(str(BASE_DIR / "icon.png")))
+                       ^^^^^
+NameError: name 'QIcon' is not defined
