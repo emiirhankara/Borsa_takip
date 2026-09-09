@@ -1,5 +1,8 @@
 from PyQt5.QtCore import QThread, Qt, pyqtSignal
-from PyQt5.QtWidgets import QLabel, QAbstractItemView, QHeaderView, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import (
+    QLabel, QAbstractItemView, QHeaderView, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
+    QHBoxLayout
+)
 from PyQt5.QtGui import QBrush, QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -46,22 +49,59 @@ class ChartCanvas(FigureCanvas):
         self.draw_idle()
 
 
+class EmptyStateWidget(QWidget):
+    """Reusable empty state widget with icon, title, and subtitle."""
+    def __init__(self, icon: str, title: str, subtitle: str, parent=None):
+        super().__init__(parent)
+        self.setStyleSheet("background: transparent;")
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.addStretch()
+        
+        # Icon
+        self.icon_label = QLabel(icon)
+        self.icon_label.setAlignment(Qt.AlignCenter)
+        self.icon_label.setStyleSheet("font-size: 40px; color: #3a4a5c; margin-bottom: 8px;")
+        layout.addWidget(self.icon_label)
+        
+        # Title
+        self.title_label = QLabel(title)
+        self.title_label.setAlignment(Qt.AlignCenter)
+        self.title_label.setStyleSheet("font-size: 14px; font-weight: 600; color: #b8c7d9; margin-bottom: 4px;")
+        layout.addWidget(self.title_label)
+        
+        # Subtitle
+        self.subtitle_label = QLabel(subtitle)
+        self.subtitle_label.setAlignment(Qt.AlignCenter)
+        self.subtitle_label.setWordWrap(True)
+        self.subtitle_label.setStyleSheet("font-size: 12px; color: #7a8897; max-width: 380px;")
+        layout.addWidget(self.subtitle_label)
+        
+        layout.addStretch()
+
+    def set_content(self, icon: str, title: str, subtitle: str):
+        self.icon_label.setText(icon)
+        self.title_label.setText(title)
+        self.subtitle_label.setText(subtitle)
+
+
 class ResultTable(QTableWidget):
-    def __init__(self, parent=None):
+    def __init__(self, empty_icon: str = "📊", empty_title: str = "Henüz veri yok", empty_subtitle: str = "Listeleri yükle butonuna basarak başlayın", parent=None):
         super().__init__(parent)
         self.setAlternatingRowColors(True)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.setMouseTracking(True)
         self.horizontalHeader().setStretchLastSection(True)
-        self.empty_label = QLabel("Veri yok / Henüz yüklenmedi", self.viewport())
-        self.empty_label.setAlignment(Qt.AlignCenter)
-        self.empty_label.setStyleSheet("color: #9aa7b8; background: transparent; font-size: 13px;")
-        self.empty_label.show()
+        self.empty_state = EmptyStateWidget(empty_icon, empty_title, empty_subtitle, self.viewport())
+        self.empty_state.show()
+
+    def set_empty_state(self, icon: str, title: str, subtitle: str):
+        self.empty_state.set_content(icon, title, subtitle)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.empty_label.setGeometry(0, 0, self.viewport().width(), self.viewport().height())
+        self.empty_state.setGeometry(0, 0, self.viewport().width(), self.viewport().height())
 
     def load_rows(self, rows, headers, color_columns=()):
         self.clear()
@@ -81,8 +121,9 @@ class ResultTable(QTableWidget):
                         color.setAlpha(38)
                         item.setBackground(QBrush(color))
                 self.setItem(row_index, column_index, item)
-        self.empty_label.setVisible(not rows)
-        self.resizeColumnsToContents()
+        self.empty_state.setVisible(not rows)
+        # Ensure columns stretch to fit container width
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
     def fill_container(self):
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)

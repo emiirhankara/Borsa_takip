@@ -13,6 +13,7 @@ import yfinance as yf
 from curl_cffi import requests
 from yfinance import EquityQuery
 
+from config import HISTORY_PERIOD, CACHE_TTL_MAP
 
 logger = logging.getLogger(__name__)
 MAX_DIVIDEND_ROWS = 500
@@ -21,8 +22,11 @@ MAX_DIVIDEND_ROWS = 500
 class MarketDataService:
     _symbol_pattern = re.compile(r"^[A-Z0-9][A-Z0-9.-]{0,14}$")
 
-    def __init__(self, cache_ttl: int = 45):
-        self.cache_ttl = cache_ttl
+    def __init__(self, cache_ttl_map: dict = None):
+        """Initialize with separate TTLs for different data types."""
+        if cache_ttl_map is None:
+            cache_ttl_map = CACHE_TTL_MAP
+        self.cache_ttl_map = cache_ttl_map
         self._cache: dict[tuple[Any, ...], tuple[float, Any]] = {}
         self._cache_lock = threading.Lock()
         self.session = requests.Session(impersonate="chrome")
@@ -34,10 +38,12 @@ class MarketDataService:
             raise ValueError("Geçersiz hisse sembolü.")
         return cleaned
 
-    def _cached(self, key: tuple[Any, ...], loader):
+    def _cached(self, key: tuple[Any, ...], loader, ttl_type: str = "history"):
+        """Cache with type-specific TTL (quote, history, or slow)."""
+        ttl = self.cache_ttl_map.get(ttl_type, 45)
         with self._cache_lock:
             cached = self._cache.get(key)
-            if cached and time.monotonic() - cached[0] < self.cache_ttl:
+            if cached and time.monotonic() - cached[0] < ttl:
                 return deepcopy(cached[1])
         value = loader()
         with self._cache_lock:
@@ -99,7 +105,9 @@ class MarketDataService:
         except Exception:
             return 0
 
-    def history(self, symbol: str, period: str = "1y", interval: str = "1d") -> pd.DataFrame:
+    def history(self, symbol: str, period: str = None, interval: str = "1d") -> pd.DataFrame:
+        if period is None:
+            period = HISTORY_PERIOD
         symbol = self._clean_symbol(symbol)
         if period not in {"5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "max"}:
             raise ValueError("Geçersiz tarih aralığı.")
@@ -109,7 +117,7 @@ class MarketDataService:
         def load():
             return self._download_history(symbol, period, interval)
 
-        return self._cached(("history", symbol, period, interval), load)
+        return self._cached(("history", symbol, period, interval), load, ttl_type="history")
 
     def _download_history(self, symbol: str, period: str, interval: str) -> pd.DataFrame:
         last_error = None
@@ -137,17 +145,30 @@ class MarketDataService:
         def load():
             return self._load_quote(symbol)
 
-        return self._cached(("quote", symbol), load)
+        return self._cached(("quote", symbol), load, ttl_type="quote")
 
     def _load_quote(self, symbol: str) -> dict[str, Any]:
         try:
+            # Try to reuse cached history data if available (much faster)
+            try:
+                history = self._cache.get(("history", symbol, HISTORY_PERIOD, "1d"))
+                if history and time.monotonic() - history[0] < self.cache_ttl_map.get("history", 45):
+                    frame = history[1]
+                    close = float(frame["Close"].iloc[-1])
+                    previous = float(frame["Close"].iloc[-2]) if len(frame) > 1 else close
+                else:
+                    raise ValueError("Cache miss")
+            except (ValueError, AttributeError, IndexError, KeyError):
+                # Fall back to separate 2-day download
+                ticker = yf.Ticker(symbol, session=self.session)
+                frame = ticker.history(period="2d", interval="1d")
+                if frame.empty:
+                    raise ValueError("Son fiyat yok.")
+                close = float(frame["Close"].iloc[-1])
+                previous = float(frame["Close"].iloc[-2]) if len(frame) > 1 else close
+            
             ticker = yf.Ticker(symbol, session=self.session)
             info = ticker.fast_info
-            history = ticker.history(period="2d", interval="1d")
-            if history.empty:
-                raise ValueError("Son fiyat yok.")
-            close = float(history["Close"].iloc[-1])
-            previous = float(history["Close"].iloc[-2]) if len(history) > 1 else close
             return {
                 "symbol": symbol.upper(),
                 "price": close,
@@ -166,7 +187,7 @@ class MarketDataService:
         def load():
             return self._load_dividend_info(symbol)
 
-        return self._cached(("dividend", symbol), load)
+        return self._cached(("dividend", symbol), load, ttl_type="slow")
 
     def _load_dividend_info(self, symbol: str) -> dict[str, Any]:
         try:
@@ -186,22 +207,30 @@ class MarketDataService:
 
     def fundamentals(self, symbol: str) -> dict[str, Any]:
         symbol = self._clean_symbol(symbol)
-        try:
-            info = yf.Ticker(symbol, session=self.session).info
-            keys = ["longName", "sector", "marketCap", "trailingPE", "forwardPE", "dividendYield", "profitMargins", "returnOnEquity"]
-            return {key: info.get(key) for key in keys}
-        except Exception as exc:
-            logger.exception("Temel veriler alinamadi: %s", symbol)
-            raise RuntimeError(f"Temel veriler alinamadi: {exc}") from exc
+        
+        def load():
+            try:
+                info = yf.Ticker(symbol, session=self.session).info
+                keys = ["longName", "sector", "marketCap", "trailingPE", "forwardPE", "dividendYield", "profitMargins", "returnOnEquity"]
+                return {key: info.get(key) for key in keys}
+            except Exception as exc:
+                logger.exception("Temel veriler alinamadi: %s", symbol)
+                raise RuntimeError(f"Temel veriler alinamadi: {exc}") from exc
+        
+        return self._cached(("fundamentals", symbol), load, ttl_type="slow")
 
     def financial_tables(self, symbol: str) -> dict[str, pd.DataFrame]:
         symbol = self._clean_symbol(symbol)
-        try:
-            ticker = yf.Ticker(symbol, session=self.session)
-            return {"Gelir Tablosu": ticker.financials, "Bilanço": ticker.balance_sheet, "Nakit Akışı": ticker.cashflow}
-        except Exception as exc:
-            logger.exception("Finansal tablolar alinamadi: %s", symbol)
-            raise RuntimeError(f"Finansal tablolar alinamadi: {exc}") from exc
+        
+        def load():
+            try:
+                ticker = yf.Ticker(symbol, session=self.session)
+                return {"Gelir Tablosu": ticker.financials, "Bilanço": ticker.balance_sheet, "Nakit Akışı": ticker.cashflow}
+            except Exception as exc:
+                logger.exception("Finansal tablolar alinamadi: %s", symbol)
+                raise RuntimeError(f"Finansal tablolar alinamadi: {exc}") from exc
+        
+        return self._cached(("financial_tables", symbol), load, ttl_type="slow")
 
     def monthly_dividend_payers(self, symbols: list[str]) -> pd.DataFrame:
         rows: list[dict[str, Any]] = []

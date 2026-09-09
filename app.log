@@ -20,3 +20,776 @@ Traceback (most recent call last):
   File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 34, in _clean_symbol
     raise ValueError("Geçersiz hisse sembolü.")
 ValueError: Geçersiz hisse sembolü.
+2026-09-07 21:41:10,506 ERROR yfinance: $CMCM: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:10,525 ERROR yfinance: $UHAL: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:11,679 ERROR yfinance: $UHAL-B: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:11,729 ERROR yfinance: $UHAL: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:11,803 ERROR yfinance: $CMCM: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:11,803 ERROR yfinance: $NLOP: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:11,888 ERROR yfinance: $UHAL-B: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:11,982 ERROR yfinance: $UHAL: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:12,334 ERROR yfinance: $LX: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:12,376 ERROR yfinance: $BAK: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:41:12,728 ERROR yfinance: $OXSQ: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:42:16,100 ERROR yfinance: $ASELS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-07 21:42:16,146 ERROR yfinance: 
+1 Failed download:
+2026-09-07 21:42:16,149 ERROR yfinance: ['ASELS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-07 21:42:16,164 ERROR services.market_data: Piyasa verisi denemesi basarisiz: ASELS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: ASELS.IS icin veri bulunamadi.
+2026-09-07 21:42:21,040 ERROR yfinance: $MSFT: possibly delisted; no price data found  (period=1y)
+2026-09-07 21:42:21,052 ERROR yfinance: 
+1 Failed download:
+2026-09-07 21:42:21,060 ERROR yfinance: ['MSFT']: possibly delisted; no price data found  (period=1y)
+2026-09-07 21:42:21,076 ERROR services.market_data: Piyasa verisi denemesi basarisiz: MSFT
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: MSFT icin veri bulunamadi.
+2026-09-07 21:42:27,557 ERROR yfinance: $CANG: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 21:42:28,183 ERROR yfinance: $CMCM: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-07 23:54:38,603 ERROR yfinance: HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: NIKE"}}}
+2026-09-07 23:54:39,801 ERROR yfinance: $NIKE: No data found, symbol may be delisted
+2026-09-07 23:54:39,802 ERROR yfinance: 
+1 Failed download:
+2026-09-07 23:54:39,803 ERROR yfinance: ['NIKE']: No data found, symbol may be delisted
+2026-09-07 23:54:39,806 ERROR services.market_data: Piyasa verisi denemesi basarisiz: NIKE
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: NIKE icin veri bulunamadi.
+2026-09-07 23:54:41,582 ERROR yfinance: HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: NIKE"}}}
+2026-09-07 23:54:42,430 ERROR yfinance: $NIKE: No data found, symbol may be delisted
+2026-09-07 23:54:42,432 ERROR yfinance: 
+1 Failed download:
+2026-09-07 23:54:42,433 ERROR yfinance: ['NIKE']: No data found, symbol may be delisted
+2026-09-07 23:54:42,435 ERROR services.market_data: Piyasa verisi denemesi basarisiz: NIKE
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: NIKE icin veri bulunamadi.
+2026-09-07 23:54:42,436 ERROR ui.widgets: Worker hatasi: <bound method MainWindow._fetch_dashboard of <ui.main_window.MainWindow object at 0x0000021BB0EE4170>>
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: NIKE icin veri bulunamadi.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\ui\widgets.py", line 105, in run
+    self.succeeded.emit(self.function(*self.args, **self.kwargs))
+                        ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\ui\main_window.py", line 444, in _fetch_dashboard
+    symbol_item = table.item(row, 1)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 112, in history
+    return self._cached(("history", symbol, period, interval), load)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 42, in _cached
+    value = loader()
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 110, in load
+    return self._download_history(symbol, period, interval)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 132, in _download_history
+    raise RuntimeError(f"Piyasa verisi alinamadi: {last_error}") from last_error
+RuntimeError: Piyasa verisi alinamadi: NIKE icin veri bulunamadi.
+2026-09-08 00:08:18,451 ERROR yfinance: $MSFT: possibly delisted; no price data found  (1d 1927-10-02 -> 2026-09-07)
+2026-09-08 00:08:18,452 ERROR services.market_data: Temettu bilgisi alinamadi: MSFT
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 175, in _load_dividend_info
+    if dividends.empty:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'empty'
+2026-09-08 00:08:18,454 ERROR ui.widgets: Worker hatasi: <bound method MainWindow._fetch_dashboard of <ui.main_window.MainWindow object at 0x000001B2F848C290>>
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 175, in _load_dividend_info
+    if dividends.empty:
+       ^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'empty'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\ui\widgets.py", line 105, in run
+    self.succeeded.emit(self.function(*self.args, **self.kwargs))
+                        ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\ui\main_window.py", line 454, in _fetch_dashboard
+    return self.market.quote(symbol), indicators(history), forecast(history), self.market.dividend_info(symbol), articles
+                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 169, in dividend_info
+    return self._cached(("dividend", symbol), load)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 42, in _cached
+    value = loader()
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 167, in load
+    return self._load_dividend_info(symbol)
+           ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 185, in _load_dividend_info
+    raise RuntimeError(f"Temettu bilgisi alinamadi: {exc}") from exc
+RuntimeError: Temettu bilgisi alinamadi: 'NoneType' object has no attribute 'empty'
+2026-09-09 18:33:19,700 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=1y)
+2026-09-09 18:33:19,703 ERROR yfinance: 
+1 Failed download:
+2026-09-09 18:33:19,704 ERROR yfinance: ['THYAO.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-09 18:33:19,707 ERROR services.market_data: Piyasa verisi denemesi basarisiz: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: THYAO.IS icin veri bulunamadi.
+2026-09-09 18:33:33,347 ERROR services.market_data: Temettu listesi alinamadi
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 827, in _request_once
+    c.perform()
+    ~~~~~~~~~^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\curl.py", line 594, in perform
+    self._check_error(ret, "perform")
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\curl.py", line 320, in _check_error
+    raise error
+curl_cffi.curl.CurlError: Failed to perform, curl: (35) TLS connect error: error:10000089:SSL routines:OPENSSL_internal:DECODE_ERROR. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 59, in dividend_universe
+    first = yf.screen(query, offset=0, count=250, sortField="dividendyield", sortAsc=False, session=self.session)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\screener\screener.py", line 212, in screen
+    response = _data.post(_SCREENER_URL_,
+                            data=data,
+                            params=params_dict)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\utils.py", line 124, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\data.py", line 418, in post
+    return self._make_request(url, request_method = self._session.post, body=body, params=params, timeout=timeout, data=data)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\utils.py", line 124, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\data.py", line 475, in _make_request
+    response = request_method(**request_args)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 952, in post
+    return self.request(method="POST", url=url, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 900, in request
+    return self._request_once(
+           ~~~~~~~~~~~~~~~~~~^
+        method=method,
+        ^^^^^^^^^^^^^^
+    ...<34 lines>...
+        discard_cookies=discard_cookies,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 834, in _request_once
+    raise error(str(e), e.code, rsp) from e
+curl_cffi.requests.exceptions.SSLError: Failed to perform, curl: (35) TLS connect error: error:10000089:SSL routines:OPENSSL_internal:DECODE_ERROR. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+2026-09-09 18:33:33,354 ERROR ui.widgets: Worker hatasi: <bound method MarketDataService.dividend_universe of <services.market_data.MarketDataService object at 0x000001F3BD3C3770>>
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 827, in _request_once
+    c.perform()
+    ~~~~~~~~~^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\curl.py", line 594, in perform
+    self._check_error(ret, "perform")
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\curl.py", line 320, in _check_error
+    raise error
+curl_cffi.curl.CurlError: Failed to perform, curl: (35) TLS connect error: error:10000089:SSL routines:OPENSSL_internal:DECODE_ERROR. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 59, in dividend_universe
+    first = yf.screen(query, offset=0, count=250, sortField="dividendyield", sortAsc=False, session=self.session)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\screener\screener.py", line 212, in screen
+    response = _data.post(_SCREENER_URL_,
+                            data=data,
+                            params=params_dict)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\utils.py", line 124, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\data.py", line 418, in post
+    return self._make_request(url, request_method = self._session.post, body=body, params=params, timeout=timeout, data=data)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\utils.py", line 124, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\data.py", line 475, in _make_request
+    response = request_method(**request_args)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 952, in post
+    return self.request(method="POST", url=url, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 900, in request
+    return self._request_once(
+           ~~~~~~~~~~~~~~~~~~^
+        method=method,
+        ^^^^^^^^^^^^^^
+    ...<34 lines>...
+        discard_cookies=discard_cookies,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 834, in _request_once
+    raise error(str(e), e.code, rsp) from e
+curl_cffi.requests.exceptions.SSLError: Failed to perform, curl: (35) TLS connect error: error:10000089:SSL routines:OPENSSL_internal:DECODE_ERROR. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\ui\widgets.py", line 105, in run
+    self.succeeded.emit(self.function(*self.args, **self.kwargs))
+                        ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 78, in dividend_universe
+    raise RuntimeError(f"Temettu listesi alinamadi: {exc}") from exc
+RuntimeError: Temettu listesi alinamadi: Failed to perform, curl: (35) TLS connect error: error:10000089:SSL routines:OPENSSL_internal:DECODE_ERROR. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+2026-09-09 18:33:59,866 ERROR yfinance: $RYN: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:26:55,298 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:26:55,300 ERROR services.market_data: Fiyat bilgisi alinamadi: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:26:56,202 ERROR yfinance: $BIMAS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:26:56,205 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:26:56,207 ERROR yfinance: ['BIMAS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:26:56,210 ERROR services.market_data: Piyasa verisi denemesi basarisiz: BIMAS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: BIMAS.IS icin veri bulunamadi.
+2026-09-10 01:26:56,946 ERROR yfinance: $BIMAS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:26:56,951 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:26:56,954 ERROR yfinance: ['BIMAS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:26:56,956 ERROR services.market_data: Piyasa verisi denemesi basarisiz: BIMAS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: BIMAS.IS icin veri bulunamadi.
+2026-09-10 01:29:53,453 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:29:53,454 ERROR services.market_data: Fiyat bilgisi alinamadi: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:29:54,781 ERROR yfinance: $AAPL: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:29:54,791 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:29:54,792 ERROR yfinance: ['AAPL']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:29:54,795 ERROR services.market_data: Piyasa verisi denemesi basarisiz: AAPL
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: AAPL icin veri bulunamadi.
+2026-09-10 01:29:56,125 ERROR yfinance: $MSFT: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:29:56,135 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:29:56,137 ERROR yfinance: ['MSFT']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:29:56,139 ERROR services.market_data: Piyasa verisi denemesi basarisiz: MSFT
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: MSFT icin veri bulunamadi.
+2026-09-10 01:29:56,853 ERROR yfinance: $MSFT: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:29:56,860 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:29:56,864 ERROR yfinance: ['MSFT']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:29:56,866 ERROR services.market_data: Piyasa verisi denemesi basarisiz: MSFT
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: MSFT icin veri bulunamadi.
+2026-09-10 01:30:53,127 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:30:53,129 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:30:53,129 ERROR yfinance: ['THYAO.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:30:53,131 ERROR services.market_data: Piyasa verisi denemesi basarisiz: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: THYAO.IS icin veri bulunamadi.
+2026-09-10 01:30:53,955 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:30:53,958 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:30:53,958 ERROR yfinance: ['THYAO.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:30:53,962 ERROR services.market_data: Piyasa verisi denemesi basarisiz: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: THYAO.IS icin veri bulunamadi.
+2026-09-10 01:30:54,292 ERROR yfinance: $ASELS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:30:54,300 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:30:54,300 ERROR yfinance: ['ASELS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:30:54,302 ERROR services.market_data: Piyasa verisi denemesi basarisiz: ASELS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: ASELS.IS icin veri bulunamadi.
+2026-09-10 01:30:55,490 ERROR yfinance: $ASELS.IS: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:30:55,490 ERROR services.market_data: Fiyat bilgisi alinamadi: ASELS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:30:55,789 ERROR yfinance: $BIMAS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:30:55,791 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:30:55,791 ERROR yfinance: ['BIMAS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:30:55,795 ERROR services.market_data: Piyasa verisi denemesi basarisiz: BIMAS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: BIMAS.IS icin veri bulunamadi.
+2026-09-10 01:30:56,883 ERROR yfinance: $BIMAS.IS: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:30:56,884 ERROR services.market_data: Fiyat bilgisi alinamadi: BIMAS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:30:57,530 ERROR yfinance: $AAPL: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:30:57,531 ERROR services.market_data: Fiyat bilgisi alinamadi: AAPL
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:31:53,817 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:31:53,818 ERROR services.market_data: Fiyat bilgisi alinamadi: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:31:54,047 ERROR yfinance: $ASELS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:31:54,057 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:31:54,058 ERROR yfinance: ['ASELS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:31:54,061 ERROR services.market_data: Piyasa verisi denemesi basarisiz: ASELS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: ASELS.IS icin veri bulunamadi.
+2026-09-10 01:31:54,886 ERROR yfinance: $ASELS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:31:54,893 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:31:54,894 ERROR yfinance: ['ASELS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:31:54,897 ERROR services.market_data: Piyasa verisi denemesi basarisiz: ASELS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: ASELS.IS icin veri bulunamadi.
+2026-09-10 01:31:55,487 ERROR yfinance: $BIMAS.IS: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:31:55,488 ERROR services.market_data: Fiyat bilgisi alinamadi: BIMAS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:31:56,087 ERROR yfinance: $AAPL: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:31:56,087 ERROR services.market_data: Fiyat bilgisi alinamadi: AAPL
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:31:56,699 ERROR yfinance: $MSFT: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:31:56,700 ERROR services.market_data: Fiyat bilgisi alinamadi: MSFT
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:34:46,625 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:34:46,626 ERROR services.market_data: Fiyat bilgisi alinamadi: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    raise ValueError("Son fiyat yok.")
+ValueError: Son fiyat yok.
+2026-09-10 01:34:46,970 ERROR yfinance: $ASELS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:34:46,981 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:34:46,981 ERROR yfinance: ['ASELS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:34:46,985 ERROR services.market_data: Piyasa verisi denemesi basarisiz: ASELS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: ASELS.IS icin veri bulunamadi.
+2026-09-10 01:35:46,291 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:46,298 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:35:46,298 ERROR yfinance: ['THYAO.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:46,302 ERROR services.market_data: Piyasa verisi denemesi basarisiz: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    last_error = None
+                ^^^^^
+ValueError: THYAO.IS icin veri bulunamadi.
+2026-09-10 01:35:47,113 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:47,116 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:35:47,116 ERROR yfinance: ['THYAO.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:47,118 ERROR services.market_data: Piyasa verisi denemesi basarisiz: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    last_error = None
+                ^^^^^
+ValueError: THYAO.IS icin veri bulunamadi.
+2026-09-10 01:35:47,446 ERROR yfinance: $ASELS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:47,453 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:35:47,453 ERROR yfinance: ['ASELS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:47,455 ERROR services.market_data: Piyasa verisi denemesi basarisiz: ASELS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    last_error = None
+                ^^^^^
+ValueError: ASELS.IS icin veri bulunamadi.
+2026-09-10 01:35:48,542 ERROR yfinance: $ASELS.IS: possibly delisted; no price data found  (period=2d)
+2026-09-10 01:35:48,542 ERROR services.market_data: Fiyat bilgisi alinamadi: ASELS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 148, in _load_quote
+    return self._cached(("quote", symbol), load)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: Son fiyat yok.
+2026-09-10 01:35:48,879 ERROR yfinance: $BIMAS.IS: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:48,886 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:35:48,886 ERROR yfinance: ['BIMAS.IS']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:48,888 ERROR services.market_data: Piyasa verisi denemesi basarisiz: BIMAS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    last_error = None
+                ^^^^^
+ValueError: BIMAS.IS icin veri bulunamadi.
+2026-09-10 01:35:50,267 ERROR yfinance: $AAPL: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:50,269 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:35:50,269 ERROR yfinance: ['AAPL']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:50,271 ERROR services.market_data: Piyasa verisi denemesi basarisiz: AAPL
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    last_error = None
+                ^^^^^
+ValueError: AAPL icin veri bulunamadi.
+2026-09-10 01:35:51,095 ERROR yfinance: $AAPL: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:51,095 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:35:51,096 ERROR yfinance: ['AAPL']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:51,100 ERROR services.market_data: Piyasa verisi denemesi basarisiz: AAPL
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    last_error = None
+                ^^^^^
+ValueError: AAPL icin veri bulunamadi.
+2026-09-10 01:35:51,435 ERROR yfinance: $MSFT: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:51,436 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:35:51,436 ERROR yfinance: ['MSFT']: possibly delisted; no price data found  (period=1y)
+2026-09-10 01:35:51,439 ERROR services.market_data: Piyasa verisi denemesi basarisiz: MSFT
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 123, in _download_history
+    last_error = None
+                ^^^^^
+ValueError: MSFT icin veri bulunamadi.
+2026-09-10 01:44:12,414 ERROR yfinance: $FENG: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:12,504 ERROR yfinance: $CANG: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:12,546 ERROR yfinance: $UHAL: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:18,095 ERROR yfinance: $NLOP: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:18,487 ERROR yfinance: $IGR: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:18,907 ERROR yfinance: $BAK: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:19,293 ERROR yfinance: $UWMC: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:47,255 ERROR yfinance: $FENG: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:47,286 ERROR yfinance: $NLOP: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:47,319 ERROR yfinance: $UHAL-B: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:47,363 ERROR yfinance: $CMCM: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:47,759 ERROR yfinance: $BAK: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:44:47,839 ERROR yfinance: $NFE: possibly delisted; no price data found  (1d 1927-10-04 -> 2026-09-09)
+2026-09-10 01:48:05,613 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:05,618 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:05,618 ERROR yfinance: ['THYAO.IS']: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:05,620 ERROR services.market_data: Piyasa verisi denemesi basarisiz: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: THYAO.IS icin veri bulunamadi.
+2026-09-10 01:48:05,633 ERROR yfinance: $MSFT: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:05,634 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:05,634 ERROR yfinance: ['MSFT']: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:05,636 ERROR services.market_data: Piyasa verisi denemesi basarisiz: MSFT
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: MSFT icin veri bulunamadi.
+2026-09-10 01:48:05,654 ERROR yfinance: $AAPL: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:05,654 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:05,654 ERROR yfinance: ['AAPL']: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:05,656 ERROR services.market_data: Piyasa verisi denemesi basarisiz: AAPL
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: AAPL icin veri bulunamadi.
+2026-09-10 01:48:05,937 ERROR yfinance: $ASELS.IS: possibly delisted; no price data found  (period=5d)
+2026-09-10 01:48:05,937 ERROR services.market_data: Fiyat bilgisi alinamadi: ASELS.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 177, in _load_quote
+    "currency": getattr(info, "currency", "USD") or "USD",
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 221, in currency
+    self._currency = md["currency"]
+                     ~~^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\scrapers\history.py", line 55, in __getitem__
+    return self._metadata()[key]
+           ~~~~~~~~~~~~~~~~^^^^^
+KeyError: 'currency'
+2026-09-10 01:48:06,449 ERROR yfinance: $MSFT: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:06,459 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:06,459 ERROR yfinance: ['MSFT']: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:06,461 ERROR services.market_data: Piyasa verisi denemesi basarisiz: MSFT
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: MSFT icin veri bulunamadi.
+2026-09-10 01:48:06,468 ERROR yfinance: $THYAO.IS: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:06,474 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:06,475 ERROR yfinance: ['THYAO.IS']: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:06,477 ERROR services.market_data: Piyasa verisi denemesi basarisiz: THYAO.IS
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: THYAO.IS icin veri bulunamadi.
+2026-09-10 01:48:06,495 ERROR yfinance: $AAPL: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:06,499 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:06,499 ERROR yfinance: ['AAPL']: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:48:06,501 ERROR services.market_data: Piyasa verisi denemesi basarisiz: AAPL
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: AAPL icin veri bulunamadi.
+2026-09-10 01:48:08,890 ERROR yfinance: $AAPL: possibly delisted; no price data found  (period=5d)
+2026-09-10 01:48:08,890 ERROR services.market_data: Fiyat bilgisi alinamadi: AAPL
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 177, in _load_quote
+    "currency": getattr(info, "currency", "USD") or "USD",
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\scrapers\quote.py", line 221, in currency
+    self._currency = md["currency"]
+                     ~~^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\scrapers\history.py", line 55, in __getitem__
+    return self._metadata()[key]
+           ~~~~~~~~~~~~~~~~^^^^^
+KeyError: 'currency'
+2026-09-10 01:48:24,466 ERROR services.market_data: Temettu listesi alinamadi
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 827, in _request_once
+    c.perform()
+    ~~~~~~~~~^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\curl.py", line 594, in perform
+    self._check_error(ret, "perform")
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\curl.py", line 320, in _check_error
+    raise error
+curl_cffi.curl.CurlError: Failed to perform, curl: (35) Recv failure: Connection was reset. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 65, in dividend_universe
+    first = yf.screen(query, offset=0, count=250, sortField="dividendyield", sortAsc=False, session=self.session)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\screener\screener.py", line 212, in screen
+    response = _data.post(_SCREENER_URL_,
+                            data=data,
+                            params=params_dict)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\utils.py", line 124, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\data.py", line 418, in post
+    return self._make_request(url, request_method = self._session.post, body=body, params=params, timeout=timeout, data=data)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\utils.py", line 124, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\data.py", line 475, in _make_request
+    response = request_method(**request_args)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 952, in post
+    return self.request(method="POST", url=url, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 900, in request
+    return self._request_once(
+           ~~~~~~~~~~~~~~~~~~^
+        method=method,
+        ^^^^^^^^^^^^^^
+    ...<34 lines>...
+        discard_cookies=discard_cookies,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 834, in _request_once
+    raise error(str(e), e.code, rsp) from e
+curl_cffi.requests.exceptions.SSLError: Failed to perform, curl: (35) Recv failure: Connection was reset. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+2026-09-10 01:48:24,501 ERROR ui.widgets: Worker hatasi: <bound method MarketDataService.dividend_universe of <services.market_data.MarketDataService object at 0x00000151DF3EBB60>>
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 827, in _request_once
+    c.perform()
+    ~~~~~~~~~^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\curl.py", line 594, in perform
+    self._check_error(ret, "perform")
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\curl.py", line 320, in _check_error
+    raise error
+curl_cffi.curl.CurlError: Failed to perform, curl: (35) Recv failure: Connection was reset. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 65, in dividend_universe
+    first = yf.screen(query, offset=0, count=250, sortField="dividendyield", sortAsc=False, session=self.session)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\screener\screener.py", line 212, in screen
+    response = _data.post(_SCREENER_URL_,
+                            data=data,
+                            params=params_dict)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\utils.py", line 124, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\data.py", line 418, in post
+    return self._make_request(url, request_method = self._session.post, body=body, params=params, timeout=timeout, data=data)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\utils.py", line 124, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\yfinance\data.py", line 475, in _make_request
+    response = request_method(**request_args)
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 952, in post
+    return self.request(method="POST", url=url, **kwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 900, in request
+    return self._request_once(
+           ~~~~~~~~~~~~~~~~~~^
+        method=method,
+        ^^^^^^^^^^^^^^
+    ...<34 lines>...
+        discard_cookies=discard_cookies,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Acer\Desktop\hisse\.venv\Lib\site-packages\curl_cffi\requests\session.py", line 834, in _request_once
+    raise error(str(e), e.code, rsp) from e
+curl_cffi.requests.exceptions.SSLError: Failed to perform, curl: (35) Recv failure: Connection was reset. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\ui\widgets.py", line 107, in run
+    self.succeeded.emit(self.function(*self.args, **self.kwargs))
+                        ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 84, in dividend_universe
+    raise RuntimeError(f"Temettu listesi alinamadi: {exc}") from exc
+RuntimeError: Temettu listesi alinamadi: Failed to perform, curl: (35) Recv failure: Connection was reset. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.
+2026-09-10 01:48:31,589 ERROR yfinance: HTTP Error 401: {"finance":{"result":null,"error":{"code":"Unauthorized","description":"Invalid Crumb"}}}
+2026-09-10 01:48:33,022 ERROR yfinance: $APPLE: No data found, symbol may be delisted
+2026-09-10 01:48:33,032 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:33,032 ERROR yfinance: ['APPLE']: No data found, symbol may be delisted
+2026-09-10 01:48:33,035 ERROR services.market_data: Piyasa verisi denemesi basarisiz: APPLE
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: APPLE icin veri bulunamadi.
+2026-09-10 01:48:34,748 ERROR yfinance: HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: APPLE"}}}
+2026-09-10 01:48:35,585 ERROR yfinance: $APPLE: No data found, symbol may be delisted
+2026-09-10 01:48:35,586 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:35,587 ERROR yfinance: ['APPLE']: No data found, symbol may be delisted
+2026-09-10 01:48:35,590 ERROR services.market_data: Piyasa verisi denemesi basarisiz: APPLE
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: APPLE icin veri bulunamadi.
+2026-09-10 01:48:39,910 ERROR yfinance: $NIKE: No data found, symbol may be delisted
+2026-09-10 01:48:39,913 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:39,914 ERROR yfinance: ['NIKE']: No data found, symbol may be delisted
+2026-09-10 01:48:39,916 ERROR services.market_data: Piyasa verisi denemesi basarisiz: NIKE
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: NIKE icin veri bulunamadi.
+2026-09-10 01:48:41,689 ERROR yfinance: $NIKE: No data found, symbol may be delisted
+2026-09-10 01:48:41,690 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:48:41,691 ERROR yfinance: ['NIKE']: No data found, symbol may be delisted
+2026-09-10 01:48:41,694 ERROR services.market_data: Piyasa verisi denemesi basarisiz: NIKE
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: NIKE icin veri bulunamadi.
+2026-09-10 01:49:03,911 ERROR yfinance: $SP: No data found, symbol may be delisted
+2026-09-10 01:49:03,914 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:49:03,914 ERROR yfinance: ['SP']: No data found, symbol may be delisted
+2026-09-10 01:49:03,916 ERROR services.market_data: Piyasa verisi denemesi basarisiz: SP
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: SP icin veri bulunamadi.
+2026-09-10 01:49:04,910 ERROR yfinance: $SP: No data found, symbol may be delisted
+2026-09-10 01:49:04,914 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:49:04,915 ERROR yfinance: ['SP']: No data found, symbol may be delisted
+2026-09-10 01:49:04,918 ERROR services.market_data: Piyasa verisi denemesi basarisiz: SP
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: SP icin veri bulunamadi.
+2026-09-10 01:50:12,507 ERROR yfinance: $SP: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:50:12,513 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:50:12,513 ERROR yfinance: ['SP']: possibly delisted; no price data found  (period=6mo)
+2026-09-10 01:50:12,515 ERROR services.market_data: Piyasa verisi denemesi basarisiz: SP
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: SP icin veri bulunamadi.
+2026-09-10 01:50:14,062 ERROR yfinance: $SP: No data found, symbol may be delisted
+2026-09-10 01:50:14,070 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:50:14,070 ERROR yfinance: ['SP']: No data found, symbol may be delisted
+2026-09-10 01:50:14,074 ERROR services.market_data: Piyasa verisi denemesi basarisiz: SP
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: SP icin veri bulunamadi.
+2026-09-10 01:51:03,417 ERROR yfinance: $SP: No data found, symbol may be delisted
+2026-09-10 01:51:03,418 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:51:03,419 ERROR yfinance: ['SP']: No data found, symbol may be delisted
+2026-09-10 01:51:03,422 ERROR services.market_data: Piyasa verisi denemesi basarisiz: SP
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: SP icin veri bulunamadi.
+2026-09-10 01:51:05,136 ERROR yfinance: $SP: No data found, symbol may be delisted
+2026-09-10 01:51:05,144 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:51:05,144 ERROR yfinance: ['SP']: No data found, symbol may be delisted
+2026-09-10 01:51:05,147 ERROR services.market_data: Piyasa verisi denemesi basarisiz: SP
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: SP icin veri bulunamadi.
+2026-09-10 01:52:03,019 ERROR yfinance: $SP: No data found, symbol may be delisted
+2026-09-10 01:52:03,027 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:52:03,028 ERROR yfinance: ['SP']: No data found, symbol may be delisted
+2026-09-10 01:52:03,030 ERROR services.market_data: Piyasa verisi denemesi basarisiz: SP
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: SP icin veri bulunamadi.
+2026-09-10 01:52:05,006 ERROR yfinance: $SP: No data found, symbol may be delisted
+2026-09-10 01:52:05,009 ERROR yfinance: 
+1 Failed download:
+2026-09-10 01:52:05,010 ERROR yfinance: ['SP']: No data found, symbol may be delisted
+2026-09-10 01:52:05,011 ERROR services.market_data: Piyasa verisi denemesi basarisiz: SP
+Traceback (most recent call last):
+  File "C:\Users\Acer\Desktop\hisse\services\market_data.py", line 131, in _download_history
+    raise ValueError(f"{symbol} icin veri bulunamadi.")
+ValueError: SP icin veri bulunamadi.

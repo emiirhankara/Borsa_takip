@@ -1,20 +1,23 @@
 from datetime import datetime
 import json
-
+from concurrent.futures import ThreadPoolExecutor
+    
 from PyQt5.QtCore import QTimer, Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QColor, QIcon, QPainter, QPixmap
 from PyQt5.QtWidgets import (
-    QComboBox, QDoubleSpinBox, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMainWindow,
-    QSpinBox,
+    QComboBox, QDoubleSpinBox, QFrame, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QMainWindow,
+    QSpinBox, QStackedWidget,
     QPushButton, QSplitter, QTabWidget,
     QTextBrowser, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
+from analysis.geopolitical import assess_news
 from analysis.technical import forecast, indicators
 from config import BASE_DIR, CACHE_DIR, DEFAULT_SYMBOL, DEFAULT_WATCHLIST, NEWS_LIMIT, REFRESH_SECONDS
 from services.market_data import MarketDataService
 from services.news import NewsService
-from ui.widgets import ChartCanvas, ResultTable, Worker
+from ui.detail_view import StockDetailView
+from ui.widgets import ChartCanvas, ResultTable, Worker, EmptyStateWidget
 
 
 THEME = """
@@ -23,20 +26,37 @@ QLineEdit, QComboBox, QDoubleSpinBox { background: #121b26; border: 1px solid #2
 QPushButton { background: #2878d0; border: 0; border-radius: 4px; padding: 8px 13px; color: white; font-weight: 600; }
 QPushButton:hover { background: #3d91ed; }
 QPushButton:disabled { background: #1a2530; color: #5a6b7d; }
-QGroupBox { background: #101821; border: 1px solid #29384a; border-radius: 5px; margin-top: 8px; }
-QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 5px; color: #b8c7d9; }
+QGroupBox { background: #101821; border: 1px solid #29384a; border-top: 3px solid #2878d0; border-radius: 5px; margin-top: 10px; }
+QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 6px; color: #b8c7d9; font-weight: 600; }
 QTableWidget { background: #141a22; alternate-background-color: #18212c; gridline-color: #2b3645; border: 0; }
 QTableWidget::item:hover { background: #263b52; }
 QTableWidget::item:selected { background: #1769aa; color: #ffffff; }
 QHeaderView::section { background: #1e2b3b; color: #b8c7d9; padding: 7px; border: 0; }
 QTextBrowser { background: #141a22; border: 0; padding: 8px; }
 QSplitter::handle { background: #29384a; }
+QSplitter::handle:hover { background: #3d91ed; }
+QSplitter::handle:horizontal { width: 4px; }
+QSplitter::handle:vertical { height: 4px; }
 QTabWidget::pane { border: 1px solid #29384a; background: #0f171f; top: -1px; }
-QTabBar::tab { background: #121b26; color: #9aa7b8; border: 1px solid #29384a; border-bottom: 0; padding: 9px 18px; min-width: 112px; }
+QTabBar::tab { background: #121b26; color: #9aa7b8; border: 1px solid #29384a; border-bottom: 0; padding: 11px 20px; min-width: 112px; font-weight: 500; }
 QTabBar::tab:hover { background: #1b2b3b; color: #e9eef5; }
 QTabBar::tab:selected { background: #1769aa; color: #ffffff; border-color: #3d91ed; font-weight: 700; }
 QTabBar::tab:!selected { margin-top: 3px; }
 """
+
+
+def add_search_icon(line_edit: QLineEdit):
+    """Add a subtle search icon inside the leading position of a QLineEdit."""
+    pixmap = QPixmap(16, 16)
+    pixmap.fill(Qt.transparent)
+    painter = QPainter(pixmap)
+    font = painter.font()
+    font.setPointSize(9)
+    painter.setFont(font)
+    painter.setPen(QColor("#7a8897"))
+    painter.drawText(pixmap.rect(), Qt.AlignCenter, "🔍")
+    painter.end()
+    line_edit.addAction(QIcon(pixmap), QLineEdit.LeadingPosition)
 
 
 class MainWindow(QMainWindow):
@@ -45,6 +65,7 @@ class MainWindow(QMainWindow):
         self.market = MarketDataService()
         self.news = NewsService()
         self.workers = []
+        self.active_tasks = {}
         self.current_symbol = DEFAULT_SYMBOL
         self.watchlist = list(DEFAULT_WATCHLIST)
         self.current_quote = None
@@ -69,38 +90,58 @@ class MainWindow(QMainWindow):
             pass
         self.setStyleSheet(THEME)
         self._build_ui()
-        QTimer.singleShot(150, lambda: self._load_symbol(DEFAULT_SYMBOL, load_watchlist=False))
-        QTimer.singleShot(1800, self._refresh_watchlist)
+        # Don't auto-load DEFAULT_SYMBOL - let user click "Listeleri yükle" or select a stock
+        # QTimer.singleShot(150, lambda: self._load_symbol(DEFAULT_SYMBOL, load_watchlist=False))
+        # Auto-refresh only on dashboard tab (index 0)
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self._refresh_watchlist)
+        self.timer.timeout.connect(self._refresh_watchlist_if_visible)
         self.timer.start(REFRESH_SECONDS * 1000)
 
     def _build_ui(self):
         root = QWidget()
         layout = QVBoxLayout(root)
-        header = QHBoxLayout()
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+        
+        # TOP HEADER: Logo + Symbol Input + Refresh Button
+        header_top = QHBoxLayout()
         title = QLabel("PiyasaRadar")
         title.setStyleSheet("font-size: 24px; font-weight: 700; color: #58d68d;")
-        header.addWidget(title)
-        header.addSpacing(20)
+        header_top.addWidget(title)
+        header_top.addSpacing(20)
         self.symbol_input = QLineEdit()
         self.symbol_input.setPlaceholderText("Sembol: AAPL veya THYAO.IS")
         self.symbol_input.setText(DEFAULT_SYMBOL)
         self.symbol_input.returnPressed.connect(lambda: self._load_symbol(self.symbol_input.text()))
-        header.addWidget(self.symbol_input, 1)
+        add_search_icon(self.symbol_input)
+        header_top.addWidget(self.symbol_input, 1)
         self.refresh_button = QPushButton("Yenile")
         self.refresh_button.setToolTip("Borsa listelerini ve seçili hisse verilerini yenile")
         self.refresh_button.clicked.connect(lambda: self._refresh_watchlist(self.refresh_button))
-        header.addWidget(self.refresh_button)
-        self.status = QLabel("Hazır")
-        self.status.setStyleSheet("color: #9aa7b8;")
-        header.addWidget(self.status)
-        self.loading_label = QLabel()
-        self.loading_label.setStyleSheet("color: #58d68d; font-weight: 600;")
-        header.addWidget(self.loading_label)
-        self.loading_timer = QTimer(self)
-        self.loading_timer.timeout.connect(self._animate_loading)
-        layout.addLayout(header)
+        header_top.addWidget(self.refresh_button)
+        layout.addLayout(header_top)
+        
+        # STATUS BAR: Unified status display (28px height, hidden when idle)
+        self.status_bar_frame = QFrame()
+        self.status_bar_frame.setStyleSheet(
+            "QFrame { background: #101821; border: 1px solid #1e2b3b; border-radius: 4px; }"
+        )
+        self.status_bar_frame.setFixedHeight(28)
+        status_layout = QHBoxLayout(self.status_bar_frame)
+        status_layout.setContentsMargins(10, 0, 10, 0)
+        status_layout.setSpacing(6)
+        
+        self.status_icon = QLabel("⏳")
+        self.status_icon.setStyleSheet("font-size: 13px; color: #58d68d;")
+        self.status_icon.hide()
+        status_layout.addWidget(self.status_icon)
+        
+        self.status = QLabel("")
+        self.status.setStyleSheet("color: #9aa7b8; font-size: 12px; font-weight: 500;")
+        status_layout.addWidget(self.status, 1)
+        layout.addWidget(self.status_bar_frame)
+        
+        self.status_bar_frame.hide()  # Hide when no active operations
 
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
@@ -118,118 +159,101 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(root)
 
     def _build_dashboard(self):
+        """Build dashboard with QStackedWidget for watchlist/detail view switching."""
+        # Create the stacked widget to switch between watchlist and detail views
+        stacked = QStackedWidget()
+        
+        # Index 0: Watchlist view (BIST | US split)
+        watchlist_view = self._build_watchlist_view()
+        stacked.addWidget(watchlist_view)
+        
+        # Index 1: Detail view
+        self.detail_view = StockDetailView()
+        self.detail_view.back_clicked.connect(lambda: stacked.setCurrentIndex(0))
+        self.detail_view.test_buy_button.clicked.connect(self._calculate_test_buy)
+        self.detail_view.news_browser.anchorClicked.connect(self._show_news_detail)
+        stacked.addWidget(self.detail_view)
+        
+        # Start with watchlist view
+        stacked.setCurrentIndex(0)
+        
+        return stacked
+    
+    def _build_watchlist_view(self) -> QWidget:
+        """Build the watchlist view with BIST and US markets split 50/50."""
         page = QWidget()
-        layout = QHBoxLayout(page)
-        layout.setContentsMargins(6, 6, 6, 6)
-
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
+        
+        # Top recommendation labels
+        self.recommendation_label = QLabel("Gerçek veriler yükleniyor...")
+        self.recommendation_label.setWordWrap(True)
+        self.recommendation_label.setStyleSheet("color: #f5b041; padding: 4px 0; font-weight: 500;")
+        layout.addWidget(self.recommendation_label)
+        
+        self.geopolitical_label = QLabel("Jeopolitik risk verisi yükleniyor...")
+        self.geopolitical_label.setWordWrap(True)
+        self.geopolitical_label.setStyleSheet("color: #b8c7d9; background: #101821; border: 1px solid #29384a; padding: 8px; border-radius: 4px;")
+        layout.addWidget(self.geopolitical_label)
+        
+        # Create a horizontal splitter to divide BIST and US panels
+        splitter = QSplitter(Qt.Horizontal)
+        
+        # Left panel: Borsa İstanbul
         left_panel = QWidget()
         left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(0, 0, 6, 0)
+        left_layout.setContentsMargins(0, 0, 0, 0)
         self.bist_table, bist_panel = self._build_market_panel(
-            "Borsa İstanbul", ", ".join(symbol for symbol in self.watchlist if symbol.endswith(".IS")), "THYAO.IS, ASELS.IS, BIMAS.IS"
+            "Borsa İstanbul", ", ".join(symbol for symbol in self.watchlist if symbol.endswith(".IS")), "THYAO.IS, ASELS.IS, BIMAS.IS", is_bist=True
         )
-        self.us_table, us_panel = self._build_market_panel(
-            "ABD Borsaları", ", ".join(symbol for symbol in self.watchlist if not symbol.endswith(".IS")), "AAPL, MSFT, JNJ"
-        )
-        left_layout.addWidget(bist_panel, 1)
         self.load_lists_button = QPushButton("Listeleri yükle")
         self.load_lists_button.setToolTip("Borsa İstanbul ve ABD hisse listelerini yükle")
         self.load_lists_button.clicked.connect(lambda: self._refresh_watchlist(self.load_lists_button))
+        left_layout.addWidget(bist_panel, 1)
         left_layout.addWidget(self.load_lists_button)
-        layout.addWidget(left_panel, 1)
-
-        center_panel = QWidget()
-        center_layout = QVBoxLayout(center_panel)
-        center_layout.setContentsMargins(0, 0, 6, 0)
-        self.quote_label = QLabel("Veri yükleniyor...")
-        self.quote_label.setStyleSheet("font-size: 23px; font-weight: 700; padding: 4px 0;")
-        center_layout.addWidget(self.quote_label)
-        self.error_label = QLabel()
-        self.error_label.setWordWrap(True)
-        self.error_label.setMaximumHeight(44)
-        self.error_label.setStyleSheet("color: #ffb4ab; background: #3a1d24; padding: 6px; border-radius: 4px;")
-        self.error_label.hide()
-        center_layout.addWidget(self.error_label)
-        self.recommendation_label = QLabel("Gerçek veriler yükleniyor...")
-        self.recommendation_label.setWordWrap(True)
-        self.recommendation_label.setStyleSheet("color: #f5b041; padding: 3px 0;")
-        center_layout.addWidget(self.recommendation_label)
-        chart_group = QGroupBox("Fiyat ve Hareketli Ortalamalar")
-        chart_layout = QVBoxLayout(chart_group)
-        self.chart = ChartCanvas()
-        chart_layout.addWidget(self.chart)
-        center_layout.addWidget(chart_group, 1)
-        forecast_group = QGroupBox("İstatistiksel Öngörü (yatırım tavsiyesi değildir)")
-        forecast_layout = QVBoxLayout(forecast_group)
-        self.forecast_table = ResultTable()
-        self.forecast_table.fill_container()
-        forecast_layout.addWidget(self.forecast_table)
-        center_layout.addWidget(forecast_group, 1)
-
-        order_panel = QGroupBox("Test Alışı")
-        order_layout = QVBoxLayout(order_panel)
-        order_layout.addWidget(QLabel("Sanal yatırım tutarı"))
-        self.test_budget = QDoubleSpinBox()
-        self.test_budget.setRange(1, 1000000000)
-        self.test_budget.setValue(10000)
-        self.test_budget.setDecimals(2)
-        order_layout.addWidget(self.test_budget)
-        order_layout.addWidget(QLabel("Elde tutma süresi"))
-        self.test_months = QComboBox()
-        self.test_months.addItem("1 ay", 1)
-        self.test_months.addItem("3 ay", 3)
-        self.test_months.addItem("6 ay", 6)
-        order_layout.addWidget(self.test_months)
-        self.test_buy_button = QPushButton("Hesapla")
-        self.test_buy_button.setToolTip("Seçilen hisse için sanal yatırım sonucunu hesapla")
-        self.test_buy_button.setEnabled(False)
-        self.test_buy_button.clicked.connect(self._calculate_test_buy)
-        order_layout.addWidget(self.test_buy_button)
-        self.test_result = QLabel("Bir hisse seçip tutar ve süre girin.")
-        self.test_result.setWordWrap(True)
-        self.test_result.setStyleSheet("color: #b8c7d9; padding-top: 8px;")
-        order_layout.addWidget(self.test_result)
-        order_layout.addWidget(QLabel("Simülasyon geçmişi"))
-        self.simulation_table = ResultTable()
-        self.simulation_table.setMaximumHeight(150)
-        order_layout.addWidget(self.simulation_table)
-        center_layout.addWidget(order_panel)
-
-        indicator_group = QGroupBox("Teknik Göstergeler")
-        indicator_layout = QHBoxLayout(indicator_group)
-        self.rsi_label = QLabel("-")
-        self.macd_label = QLabel("-")
-        self.sma_label = QLabel("-")
-        indicator_layout.addWidget(QLabel("RSI(14)"))
-        indicator_layout.addWidget(self.rsi_label)
-        indicator_layout.addWidget(QLabel("MACD"))
-        indicator_layout.addWidget(self.macd_label)
-        indicator_layout.addWidget(QLabel("SMA20 / SMA50"))
-        indicator_layout.addWidget(self.sma_label)
-        center_layout.addWidget(indicator_group)
-        layout.addWidget(center_panel, 3)
-
+        splitter.addWidget(left_panel)
+        
+        # Right panel: ABD Borsaları
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
         right_layout.setContentsMargins(0, 0, 0, 0)
+        self.us_table, us_panel = self._build_market_panel(
+            "ABD Borsaları", ", ".join(symbol for symbol in self.watchlist if not symbol.endswith(".IS")), "AAPL, MSFT, JNJ", is_bist=False
+        )
         right_layout.addWidget(us_panel, 1)
-        layout.addWidget(right_panel, 1)
+        splitter.addWidget(right_panel)
+        
+        # Set equal sizes for both panels (50/50)
+        splitter.setSizes([1, 1])
+        splitter.setCollapsible(0, False)
+        splitter.setCollapsible(1, False)
+        
+        layout.addWidget(splitter, 1)
+        
         return page
 
-    def _build_market_panel(self, title, symbols, placeholder):
-        panel = QGroupBox(title)
+    def _build_market_panel(self, title, symbols, placeholder, is_bist=True):
+        flag_title = ("🇹🇷 " if is_bist else "🇺🇸 ") + title
+        
+        panel = QGroupBox(flag_title)
         layout = QVBoxLayout(panel)
+        layout.setContentsMargins(10, 16, 10, 10)
+        layout.setSpacing(8)
+        
         input_field = QLineEdit()
         input_field.setPlaceholderText(placeholder)
         input_field.setText(symbols)
         input_field.returnPressed.connect(self._refresh_watchlist)
+        add_search_icon(input_field)
         layout.addWidget(input_field)
-        table = ResultTable()
+        
+        table = ResultTable(empty_icon="📊", empty_title="Henüz veri yok", empty_subtitle="Listeleri yükle butonuna basarak başlayın")
         table.setSelectionBehavior(table.SelectRows)
         table.setEditTriggers(table.NoEditTriggers)
         table.cellClicked.connect(self._watchlist_row_clicked)
         layout.addWidget(table)
-        if title.startswith("Borsa"):
+        if is_bist:
             self.bist_input = input_field
         else:
             self.us_watchlist_input = input_field
@@ -238,84 +262,195 @@ class MainWindow(QMainWindow):
     def _build_dividend_tab(self):
         page = QWidget()
         layout = QVBoxLayout(page)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+        
         intro = QLabel("ABD borsalarında temettü verimi pozitif olan hisseler")
+        intro.setStyleSheet("color: #b8c7d9; font-size: 12px; padding: 8px; background: #101821; border-radius: 4px;")
         layout.addWidget(intro)
-        controls = QHBoxLayout()
+        
+        # Filters in a group box
+        filter_group = QGroupBox("Filtreler")
+        controls = QHBoxLayout(filter_group)
+        controls.setSpacing(10)
+        controls.setContentsMargins(10, 16, 10, 10)
+        
+        # Search
+        search_layout = QVBoxLayout()
+        search_label = QLabel("Ara")
+        search_label.setStyleSheet("font-size: 11px; color: #9aa7b8; font-weight: 500;")
         self.dividend_search = QLineEdit()
-        self.dividend_search.setPlaceholderText("Sembol veya şirket ara")
-        controls.addWidget(self.dividend_search, 2)
+        self.dividend_search.setPlaceholderText("Sembol veya şirket")
+        self.dividend_search.setMinimumWidth(150)
+        add_search_icon(self.dividend_search)
+        search_layout.addWidget(search_label)
+        search_layout.addWidget(self.dividend_search)
+        controls.addLayout(search_layout, 2)
+        
+        # Exchange
+        exchange_layout = QVBoxLayout()
+        exchange_label = QLabel("Borsa")
+        exchange_label.setStyleSheet("font-size: 11px; color: #9aa7b8; font-weight: 500;")
         self.dividend_exchange = QComboBox()
         self.dividend_exchange.addItems(["Tüm ABD borsaları", "NASDAQ", "NYSE", "AMEX"])
-        controls.addWidget(self.dividend_exchange)
+        self.dividend_exchange.setMinimumWidth(150)
+        exchange_layout.addWidget(exchange_label)
+        exchange_layout.addWidget(self.dividend_exchange)
+        controls.addLayout(exchange_layout)
+        
+        # Min price
+        min_price_layout = QVBoxLayout()
+        min_price_label = QLabel("Min Fiyat")
+        min_price_label.setStyleSheet("font-size: 11px; color: #9aa7b8; font-weight: 500;")
         self.dividend_min_price = QDoubleSpinBox()
         self.dividend_min_price.setRange(0, 1000000)
-        self.dividend_min_price.setPrefix("Min fiyat ")
-        controls.addWidget(self.dividend_min_price)
+        self.dividend_min_price.setMinimumWidth(130)
+        self.dividend_min_price.setSuffix(" $")
+        min_price_layout.addWidget(min_price_label)
+        min_price_layout.addWidget(self.dividend_min_price)
+        controls.addLayout(min_price_layout)
+        
+        # Max price
+        max_price_layout = QVBoxLayout()
+        max_price_label = QLabel("Max Fiyat")
+        max_price_label.setStyleSheet("font-size: 11px; color: #9aa7b8; font-weight: 500;")
         self.dividend_max_price = QDoubleSpinBox()
         self.dividend_max_price.setRange(0, 1000000)
         self.dividend_max_price.setValue(1000000)
-        self.dividend_max_price.setPrefix("Max fiyat ")
-        controls.addWidget(self.dividend_max_price)
+        self.dividend_max_price.setMinimumWidth(130)
+        self.dividend_max_price.setSuffix(" $")
+        max_price_layout.addWidget(max_price_label)
+        max_price_layout.addWidget(self.dividend_max_price)
+        controls.addLayout(max_price_layout)
+        
+        # Min yield
+        yield_layout = QVBoxLayout()
+        yield_label = QLabel("Min Verim")
+        yield_label.setStyleSheet("font-size: 11px; color: #9aa7b8; font-weight: 500;")
         self.dividend_min_yield = QDoubleSpinBox()
         self.dividend_min_yield.setRange(0, 100)
-        self.dividend_min_yield.setSuffix("% verim")
-        controls.addWidget(self.dividend_min_yield)
+        self.dividend_min_yield.setMinimumWidth(130)
+        self.dividend_min_yield.setSuffix(" %")
+        yield_layout.addWidget(yield_label)
+        yield_layout.addWidget(self.dividend_min_yield)
+        controls.addLayout(yield_layout)
+        
+        # Min payments
+        payments_layout = QVBoxLayout()
+        payments_label = QLabel("Min Ödeme")
+        payments_label.setStyleSheet("font-size: 11px; color: #9aa7b8; font-weight: 500;")
         self.dividend_min_payments = QSpinBox()
         self.dividend_min_payments.setRange(0, 52)
-        self.dividend_min_payments.setSuffix(" ödeme+")
-        controls.addWidget(self.dividend_min_payments)
+        self.dividend_min_payments.setMinimumWidth(130)
+        self.dividend_min_payments.setSuffix(" /yıl")
+        payments_layout.addWidget(payments_label)
+        payments_layout.addWidget(self.dividend_min_payments)
+        controls.addLayout(payments_layout)
+        
+        # Filter button
+        filter_btn_layout = QVBoxLayout()
+        filter_btn_layout.addStretch()
         self.dividend_filter_button = QPushButton("Filtrele")
+        self.dividend_filter_button.setMinimumWidth(90)
         self.dividend_filter_button.clicked.connect(self._filter_dividends)
-        controls.addWidget(self.dividend_filter_button)
-        layout.addLayout(controls)
-        self.dividend_table = ResultTable()
+        filter_btn_layout.addWidget(self.dividend_filter_button)
+        controls.addLayout(filter_btn_layout)
+        
+        layout.addWidget(filter_group)
+        
+        self.dividend_table = ResultTable(empty_icon="💰", empty_title="Henüz veri yok", empty_subtitle="Temettü listesini yükle butonuna basarak başlayın")
         self.dividend_table.cellClicked.connect(lambda row, _column: self._load_symbol(self.dividend_table.item(row, 0).text()))
-        layout.addWidget(self.dividend_table)
+        layout.addWidget(self.dividend_table, 1)
+        
         self.dividend_status = QLabel("Listeyi görmek için Temettü listesini yükle düğmesine basın.")
+        self.dividend_status.setStyleSheet("color: #9aa7b8; font-size: 12px; padding: 8px; background: #101821; border: 1px solid #29384a; border-radius: 4px;")
         layout.addWidget(self.dividend_status)
+        
         self.dividend_load_button = QPushButton("Temettü listesini yükle")
+        self.dividend_load_button.setMinimumHeight(36)
         self.dividend_load_button.clicked.connect(self._load_dividend_universe)
         layout.addWidget(self.dividend_load_button)
+        
         return page
 
     def _build_financial_tab(self):
         page = QWidget()
         layout = QVBoxLayout(page)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+        
+        # Info bar
+        info_frame = QFrame()
+        info_frame.setStyleSheet("QFrame { background: #101821; border: 1px solid #29384a; border-radius: 4px; }")
+        info_layout = QHBoxLayout(info_frame)
+        info_layout.setContentsMargins(10, 8, 10, 8)
         self.financial_status = QLabel("Bir hisse seçildiğinde finansal tablolar burada yüklenir.")
-        layout.addWidget(self.financial_status)
+        self.financial_status.setStyleSheet("color: #b8c7d9; font-size: 12px; font-weight: 500;")
+        info_layout.addWidget(self.financial_status)
+        layout.addWidget(info_frame)
+        
+        # Empty state
+        self.financial_empty_state = EmptyStateWidget("📄", "Henüz veri yok", "Bir hisse seçildiğinde finansal tablolar burada yüklenir.")
+        layout.addWidget(self.financial_empty_state, 1)
+        
+        # Tables container
         self.financial_tables = QTabWidget()
-        self.financial_empty_label = QLabel("Veri yok / Henüz yüklenmedi")
-        self.financial_empty_label.setAlignment(Qt.AlignCenter)
-        self.financial_empty_label.setStyleSheet("color: #9aa7b8; padding: 24px;")
-        layout.addWidget(self.financial_tables)
-        layout.addWidget(self.financial_empty_label)
+        self.financial_tables.hide()
+        layout.addWidget(self.financial_tables, 1)
+        
         return page
 
     def _build_news_tab(self):
         page = QWidget()
         layout = QVBoxLayout(page)
-        news_splitter = QSplitter(Qt.Vertical)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+        
+        # Info bar
+        info_frame = QFrame()
+        info_frame.setStyleSheet("QFrame { background: #101821; border: 1px solid #29384a; border-radius: 4px; }")
+        info_layout = QHBoxLayout(info_frame)
+        info_layout.setContentsMargins(10, 8, 10, 8)
+        self.news_status = QLabel("Bir hisse seçildiğinde güncel haberler burada yüklenir.")
+        self.news_status.setStyleSheet("color: #b8c7d9; font-size: 12px; font-weight: 500;")
+        info_layout.addWidget(self.news_status)
+        layout.addWidget(info_frame)
+        
+        # Empty state
+        self.news_empty_state = EmptyStateWidget("📰", "Henüz haber yok", "Bir hisse seçildiğinde güncel haberler burada yüklenir.")
+        layout.addWidget(self.news_empty_state, 1)
+        
+        # Splitter container
+        self.news_splitter = QSplitter(Qt.Vertical)
+        self.news_splitter.setStyleSheet(
+            "QSplitter::handle { background: #29384a; min-height: 4px; } "
+            "QSplitter::handle:hover { background: #3d91ed; }"
+        )
+        
         self.news_browser = QTextBrowser()
         self.news_browser.setPlaceholderText("Bir hisse seçildiğinde haberler burada yüklenir.")
         self.news_browser.setOpenExternalLinks(False)
         self.news_browser.anchorClicked.connect(self._show_news_detail)
-        news_splitter.addWidget(self.news_browser)
+        self.news_splitter.addWidget(self.news_browser)
+        
         self.news_detail = QTextBrowser()
         self.news_detail.setOpenExternalLinks(True)
         self.news_detail.setPlaceholderText("Detayını görmek için bir habere tıklayın.")
-        news_splitter.addWidget(self.news_detail)
-        layout.addWidget(news_splitter)
+        self.news_splitter.addWidget(self.news_detail)
+        
+        self.news_splitter.hide()
+        layout.addWidget(self.news_splitter, 1)
+        
         return page
 
     def _run(self, function, success, *args, context="Veri", trigger=None):
-        self._set_loading(True)
-        self.active_requests += 1
-        self.status.setText(f"{context} alınıyor...")
         if trigger is not None:
             trigger.setEnabled(False)
         worker = Worker(function, *args)
         worker.trigger = trigger
         self.workers.append(worker)
+        self.active_tasks[worker] = context
+        self._update_status_bar()
         worker.succeeded.connect(success)
         worker.failed.connect(self._show_error)
         worker.finished.connect(lambda: self._worker_finished(worker))
@@ -324,35 +459,39 @@ class MainWindow(QMainWindow):
     def _worker_finished(self, worker):
         if worker in self.workers:
             self.workers.remove(worker)
+        if worker in self.active_tasks:
+            del self.active_tasks[worker]
         if getattr(worker, "trigger", None) is not None:
             worker.trigger.setEnabled(True)
-        self.active_requests = max(0, self.active_requests - 1)
-        if not self.active_requests:
-            self._set_loading(False)
-            self.status.setText(f"Son güncelleme: {datetime.now():%H:%M:%S}")
+        self._update_status_bar()
 
-    def _set_loading(self, loading):
-        if loading:
-            self.loading_step = 0
-            self.loading_label.show()
-            self.loading_timer.start(300)
-            self._animate_loading()
+    def _update_status_bar(self):
+        if self.active_tasks:
+            messages = list(dict.fromkeys(f"{ctx} alınıyor..." for ctx in self.active_tasks.values()))
+            text = " • ".join(messages)
+            self.status.setText(text)
+            self.status_icon.show()
+            self.status_bar_frame.show()
         else:
-            self.loading_timer.stop()
-            self.loading_label.clear()
-            self.loading_label.hide()
+            self.status.setText("")
+            self.status_icon.hide()
+            self.status_bar_frame.hide()
 
-    def _animate_loading(self):
-        self.loading_step = (self.loading_step + 1) % 4
-        self.loading_label.setText("Yükleniyor" + "." * self.loading_step)
-
-    def _load_symbol(self, symbol, load_watchlist=True):
+    def _load_symbol(self, symbol, load_watchlist=True, show_detail=False):
         symbol = symbol.strip().upper()
         if not symbol:
             return
         self.current_symbol = symbol
         self.news_loaded_symbol = None
         self.financials_loaded_symbol = None
+        
+        # Show detail view if requested
+        if show_detail:
+            stacked = self.tabs.widget(0)  # Get the stacked widget from dashboard tab
+            if isinstance(stacked, QStackedWidget):
+                stacked.setCurrentIndex(1)  # Switch to detail view
+                self.detail_view.set_loading("Hisse verileri yükleniyor...")
+        
         self._run(self._fetch_dashboard, self._present_dashboard, symbol, context="Genel bakış")
         if load_watchlist:
             self._load_context_for_current_tab()
@@ -386,15 +525,20 @@ class MainWindow(QMainWindow):
         self.watchlist = symbols
         self._run(self._fetch_watchlist, self._present_watchlist, symbols, context="Borsa listeleri", trigger=trigger)
 
+    def _refresh_watchlist_if_visible(self):
+        """Only refresh watchlist if Dashboard tab (index 0) is currently active."""
+        if self.tabs.currentIndex() == 0:
+            self._refresh_watchlist()
+
     def _fetch_watchlist(self, symbols):
-        rows = []
-        for symbol in symbols:
+        """Fetch data for multiple symbols in parallel using ThreadPoolExecutor."""
+        def fetch_symbol_data(symbol):
             try:
                 history = self.market.history(symbol)
                 quote = self.market.quote(symbol)
                 predictions = forecast(history)
                 one_month = predictions[0]
-                rows.append({
+                return {
                     "symbol": quote["symbol"],
                     "price": quote["price"],
                     "currency": quote["currency"],
@@ -402,9 +546,18 @@ class MainWindow(QMainWindow):
                     "forecast_pct": one_month.change_pct,
                     "signal": one_month.signal,
                     "confidence": one_month.confidence,
-                })
+                }
             except Exception:
-                continue
+                return None
+        
+        rows = []
+        # Parallelize with up to 8 workers to fetch multiple symbols concurrently
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            results = executor.map(fetch_symbol_data, symbols)
+            for result in results:
+                if result is not None:
+                    rows.append(result)
+        
         return rows
 
     def _present_watchlist(self, rows):
@@ -427,50 +580,93 @@ class MainWindow(QMainWindow):
             f"({best['forecast_pct']:+.2f}%, güven: {best['confidence']}). "
             "Bu bir garanti veya yatırım tavsiyesi değildir; geçmiş fiyat verisine dayalı istatistiksel tahmindir."
         )
-        self._load_symbol(best["symbol"], load_watchlist=False)
+        # Don't auto-load the best symbol - let user choose which one to view
 
     def _watchlist_row_clicked(self, row, column):
         table = self.sender()
         if column == 0:
+            # Favorite toggle
             symbol_item = table.item(row, 1)
             if symbol_item:
                 self._toggle_favorite(symbol_item.text())
             return
+        # Load stock detail
         symbol_item = table.item(row, 1)
         if symbol_item:
-            self._load_symbol(symbol_item.text())
+            self._load_symbol(symbol_item.text(), load_watchlist=False, show_detail=True)
 
     def _fetch_dashboard(self, symbol):
         history = self.market.history(symbol)
-        return self.market.quote(symbol), indicators(history), forecast(history), self.market.dividend_info(symbol)
+        try:
+            articles = self.news.fetch(symbol, NEWS_LIMIT)
+        except RuntimeError:
+            articles = []
+        return self.market.quote(symbol), indicators(history), forecast(history), self.market.dividend_info(symbol), articles
 
     def _present_dashboard(self, payload):
-        quote, frame, predictions, dividend = payload
+        """Update the detail view with dashboard data."""
+        quote, frame, predictions, dividend, articles = payload
         self.current_quote = quote
         self.current_predictions = predictions
         self.current_dividend = dividend
-        self.error_label.hide()
-        self.test_buy_button.setEnabled(True)
-        self.test_budget.setSuffix(f" {quote['currency']}")
-        self.test_result.setText("Tutar ve süreyi seçip Hesapla düğmesine basın.")
+        self.current_news = articles
+        self.detail_view.error_label.hide()
+        self.detail_view.test_buy_button.setEnabled(True)
+        self.detail_view.test_budget.setSuffix(f" {quote['currency']}")
+        self.detail_view.test_result.setText("Tutar ve süreyi seçip Hesapla düğmesine basın.")
         color = "#58d68d" if quote["change"] >= 0 else "#ed6a5a"
-        self.quote_label.setText(f"{quote['symbol']}   {quote['price']:.2f} {quote['currency']}   <span style='color:{color}'>{quote['change']:+.2f} ({quote['change_pct']:+.2f}%)</span>")
-        self.chart.plot(frame)
+        self.detail_view.quote_label.setText(
+            f"{quote['symbol']}   {quote['price']:.2f} {quote['currency']}   "
+            f"<span style='color:{color}'>{quote['change']:+.2f} ({quote['change_pct']:+.2f}%)</span>"
+        )
+        self.detail_view.chart.plot(frame)
         latest = frame.iloc[-1]
-        self.rsi_label.setText(f"{latest['RSI']:.1f}")
-        self.macd_label.setText(f"{latest['MACD']:.3f} / sinyal {latest['MACD_Signal']:.3f}")
-        self.sma_label.setText(f"{latest['SMA20']:.2f} / {latest['SMA50']:.2f}")
+        self.detail_view.rsi_card.value.setText(f"{latest['RSI']:.1f}")
+        self.detail_view.macd_card.value.setText(f"{latest['MACD']:.3f}")
+        self.detail_view.sma_card.value.setText(f"{latest['SMA20']:.2f}/{latest['SMA50']:.2f}")
+        
+        # Forecast table
         rows = []
         for item in predictions:
             action, usage = self._scenario_action(item)
             rows.append([item.horizon, f"{item.target_price:.2f}", f"{item.change_pct:+.2f}%", item.signal, item.confidence, action, usage])
-        self.forecast_table.load_rows(rows, ["Vade", "Tahmini Fiyat", "Potansiyel", "Sinyal", "Güven", "Aksiyon", "Kullanım"], color_columns=(2,))
-        self.forecast_table.fill_container()
-        self.test_months.clear()
+        self.detail_view.forecast_table.load_rows(rows, ["Vade", "Tahmini Fiyat", "Potansiyel", "Sinyal", "Güven", "Aksiyon", "Kullanım"], color_columns=(2,))
+        self.detail_view.forecast_table.fill_container()
+        
+        # Test months combo
+        self.detail_view.test_months.clear()
         for item in predictions:
             action, _usage = self._scenario_action(item)
             months = int(item.horizon.split()[0])
-            self.test_months.addItem(f"{item.horizon} - {action}", months)
+            self.detail_view.test_months.addItem(f"{item.horizon} - {action}", months)
+        
+        # Geopolitical
+        geopolitical = assess_news(articles)
+        topics = ", ".join(geopolitical.matched_topics) if geopolitical.matched_topics else "belirgin konu yok"
+        self.detail_view.geopolitical_label.setText(
+            f"Jeopolitik senaryo: <b>Yükseliş %{geopolitical.up_probability}</b> | "
+            f"<b>Düşüş %{geopolitical.down_probability}</b> | Risk: {geopolitical.risk_level}<br>"
+            f"{geopolitical.summary} Konular: {topics}. "
+            "Bu oranlar haber başlıklarından üretilen yaklaşık göstergelerdir; yatırım tavsiyesi değildir."
+        )
+        
+        # Dividend info
+        self.detail_view.dividend_label.setText(
+            f"Yıllık hisse başı temettü: {dividend['annual_per_share']:.2f} {quote['currency']}<br>"
+            f"Son 12 ay ödeme sayısı: {dividend['payment_count']}"
+        )
+        
+        # News - will be presented separately
+        # Recommendation for watchlist
+        if self.watchlist_rows:
+            for row in self.watchlist_rows:
+                if row["symbol"] == quote["symbol"]:
+                    self.recommendation_label.setText(
+                        f"Veriye dayalı 1 ay senaryosunda tahmini getiri: {quote['symbol']} "
+                        f"({row['forecast_pct']:+.2f}%, güven: {row['confidence']}). "
+                        "Bu bir garanti veya yatırım tavsiyesi değildir; geçmiş fiyat verisine dayalı istatistiksel tahmindir."
+                    )
+                    break
 
     def _scenario_action(self, prediction):
         if prediction.signal == "Asiri alim" or prediction.change_pct <= -5:
@@ -547,8 +743,14 @@ class MainWindow(QMainWindow):
     def _present_news(self, articles):
         self.current_news = articles
         if not articles:
-            self.news_browser.setText("Bu sembol için haber bulunamadı.")
+            self.news_status.setText(f"{self.current_symbol} için haber bulunamadı.")
+            self.news_splitter.hide()
+            self.news_empty_state.show()
+            if hasattr(self, "detail_view"):
+                self.detail_view.news_browser.setText("Bu sembol için haber bulunamadı.")
             return
+
+        self.news_status.setText(f"{self.current_symbol} güncel haber akışı ({len(articles)} haber)")
         html = "".join(
             f"<article style='padding:8px;border-bottom:1px solid #29384a;'>"
             f"<a href='{item['link']}'><b>{item['title']}</b></a><br>"
@@ -557,32 +759,58 @@ class MainWindow(QMainWindow):
             for item in articles
         )
         self.news_browser.setHtml(html)
+        self.news_empty_state.hide()
+        self.news_splitter.show()
+        if hasattr(self, "detail_view"):
+            self.detail_view.news_browser.setHtml(html)
 
     def _show_news_detail(self, url):
         link = url.toString()
         article = next((item for item in self.current_news if item.get("link") == link), None)
         if not article:
             return
-        self.news_detail.setHtml(
+        content = (
             f"<h2>{article['title']}</h2>"
             f"<p><small>{article.get('source', 'Yahoo Finance')} | {article['published']}</small></p>"
             f"<p>{article.get('summary', 'Detay bulunamadı.')}</p>"
             f"<p><a href='{article['link']}'>Kaynak haberi aç</a></p>"
         )
+        self.news_detail.setHtml(content)
+        if hasattr(self, "detail_view"):
+            self.detail_view.news_detail.setHtml(content)
 
     def _present_financials(self, tables):
+        # Update main window financial tab
         self.financial_status.setText(f"{self.current_symbol} finansal tabloları")
         self.financial_tables.clear()
-        self.financial_empty_label.setVisible(not tables)
-        for name, frame in tables.items():
-            table = ResultTable()
-            if frame.empty:
-                table.load_rows([], ["Kalem"])
-            else:
-                rows = [[index] + [value if value == value else "-" for value in row] for index, row in frame.head(30).iterrows()]
-                table.load_rows(rows, ["Kalem"] + [str(column)[:10] for column in frame.columns])
-            self.financial_tables.addTab(table, name)
-        self.financial_empty_label.setVisible(not tables)
+        if tables:
+            for name, frame in tables.items():
+                table = ResultTable()
+                if frame.empty:
+                    table.load_rows([], ["Kalem"])
+                else:
+                    rows = [[index] + [value if value == value else "-" for value in row] for index, row in frame.head(30).iterrows()]
+                    table.load_rows(rows, ["Kalem"] + [str(column)[:10] for column in frame.columns])
+                self.financial_tables.addTab(table, name)
+            self.financial_empty_state.hide()
+            self.financial_tables.show()
+        else:
+            self.financial_tables.hide()
+            self.financial_empty_state.show()
+
+        # Update detail view financial tab
+        if hasattr(self, "detail_view"):
+            self.detail_view.financial_tables.clear()
+            self.detail_view.financial_empty_label.setVisible(not tables)
+            if tables:
+                for name, frame in tables.items():
+                    table = ResultTable()
+                    if frame.empty:
+                        table.load_rows([], ["Kalem"])
+                    else:
+                        rows = [[index] + [value if value == value else "-" for value in row] for index, row in frame.head(30).iterrows()]
+                        table.load_rows(rows, ["Kalem"] + [str(column)[:10] for column in frame.columns])
+                    self.detail_view.financial_tables.addTab(table, name)
 
     def _load_dividend_universe(self):
         self.dividend_status.setText("Temettü hisseleri yükleniyor...")
@@ -619,10 +847,14 @@ class MainWindow(QMainWindow):
 
     def _show_error(self, message):
         self.status.setText("Veri alınamadı")
-        self.error_label.setText(f"Veri alınamadı: {message}")
-        self.error_label.show()
-        QTimer.singleShot(8000, self.error_label.hide)
-        if hasattr(self, "dividend_status") and self.tabs.currentIndex() == 1:
+        
+        # Show error in detail view if it's currently visible
+        stacked = self.tabs.widget(0)
+        if isinstance(stacked, QStackedWidget) and stacked.currentIndex() == 1:
+            self.detail_view.set_error(message)
+        
+        # Show error for dividend tab if active
+        if self.tabs.currentIndex() == 1 and hasattr(self, "dividend_status"):
             self.dividend_status.setText("Veri alınamadı. Yeniden denemek için listeyi tekrar yükleyin.")
 
     def closeEvent(self, event):
